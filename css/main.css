@@ -83,15 +83,26 @@ main h2 {
     border-bottom: 1px solid #ccc;
 }
 
-.unit td button {
+.unit button {
     background: #fff;
+    padding: 5px 10px;
     border: 1px solid #999;
+    outline: none;
+    cursor: pointer;
 }
 
 .unit-header {
     background: #eee;
     border-top-left-radius: 5px;
     border-top-right-radius: 5px;
+    border-bottom: 1px solid #ccc;
+}
+
+.unit-footer {
+    background: #eee;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    border-top: 1px solid #ccc;
 }
 
 footer {
