@@ -22,6 +22,11 @@
                         <div class="unit">
                             <div class="unit-header">
                                 <label>Search: <input id="memory-unit-search" type="text" placeholder="x3000"></label>
+                                <p>
+                                <button onclick="shiftMemory(1)">&cuvee;</button>
+                                <button onclick="shiftMemory(-1)">&cuwed;</button>
+                                <button onclick="setMemoryToPC()">PC</button>
+                                </p>
                             </div>
                             <div class="unit-body">
                                 <table id="memory-unit-memory">
@@ -56,9 +61,9 @@
                                 </table>
                             </div>
                             <div class="unit-footer">
-                                <button>&cuvee;</button>
-                                <button>&cuwed;</button>
-                                <button>PC</button>
+                                <button onclick="shiftMemory(1)">&cuvee;</button>
+                                <button onclick="shiftMemory(-1)">&cuwed;</button>
+                                <button onclick="setMemoryToPC()">PC</button>
                             </div>
                         </div>
                     </section>

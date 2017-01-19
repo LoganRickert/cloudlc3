@@ -16,6 +16,16 @@ var memory = new Memory(0xffff);
 // Starting memory address
 var sm = 0x3000;
 
+function shiftMemory(delta) {
+    sm += delta
+    loadMemory(sm);
+}
+
+function setMemoryToPC() {
+    sm = 0x3000;
+    loadMemory(sm);
+}
+
 /*
     sm - Starting memory address
 */
