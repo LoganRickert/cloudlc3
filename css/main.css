@@ -1,5 +1,9 @@
 
-h1, h2, h3, h4 {
+html {
+    background: #fff;
+}
+
+h1, h2, h3, h4, p {
     margin: 0;
 }
 
@@ -15,7 +19,6 @@ header {
 }
 
 main section {
-    background: blue;
     padding: 20px;
 }
 
@@ -29,6 +32,37 @@ main .left {
 
 main .right {
     float: right;
+}
+
+main h2 {
+    padding: 0 0 15px 0;
+}
+
+.unit {
+    background: #fff;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+.unit div {
+    padding: 10px;
+}
+
+.unit label {
+    color: #333;
+}
+
+.unit input[type=text] {
+    border: 1px solid #ccc;
+    padding: 5px;
+    margin: 5px;
+    color: #333;
+}
+
+.unit-header {
+    background: #eee;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
 }
 
 footer {
