@@ -50,13 +50,41 @@ main h2 {
 
 .unit label {
     color: #333;
+    background: #fff;
+    padding: 5px 0 5px 10px;
+    border-top: 1px solid #ccc;
+    border-left: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
 }
 
 .unit input[type=text] {
     border: 1px solid #ccc;
     padding: 5px;
-    margin: 5px;
+    margin: 5px 0 5px 5px;
     color: #333;
+}
+
+.unit table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.unit th {
+    font-weight: bold;
+}
+
+.unit th, .unit td {
+    text-align: left;
+    padding: 15px 0;
+}
+
+.unit tr {
+    border-bottom: 1px solid #ccc;
+}
+
+.unit td button {
+    background: #fff;
+    border: 1px solid #999;
 }
 
 .unit-header {
