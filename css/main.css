@@ -75,7 +75,8 @@ main h2 {
 
 .unit th, .unit td {
     text-align: left;
-    padding: 15px 0;
+    padding: 10px 0;
+    font-size: 14px;
 }
 
 .unit tr {
