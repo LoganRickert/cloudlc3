@@ -30,3 +30,9 @@ main .left {
 main .right {
     float: right;
 }
+
+footer {
+    clear: both;
+    text-align: center;
+    padding: 20px 0;
+}
