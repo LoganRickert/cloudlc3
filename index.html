@@ -24,10 +24,41 @@
                                 <label>Search: <input id="memory-unit-search" type="text" placeholder="x3000"></label>
                             </div>
                             <div class="unit-body">
-                                <p>This is a body</p>
-                                <p>I hope you like this body.</p>
+                                <table>
+                                    <tr>
+                                        <th></th>
+                                        <th>Addr</th>
+                                        <th>Label</th>
+                                        <th>Hex</th>
+                                        <th>Instruction</th>
+                                    </tr>
+                                    <tr>
+                                        <td><button id="memory-unit-breakpoint">Br</button></td>
+                                        <td>x3000</td>
+                                        <td>Start</td>
+                                        <td>x0000</td>
+                                        <td>NOP</td>
+                                    </tr>
+                                    <tr>
+                                        <td><button id="memory-unit-breakpoint">Br</button></td>
+                                        <td>x3001</td>
+                                        <td>Ready</td>
+                                        <td>x0000</td>
+                                        <td>NOP</td>
+                                    </tr>
+                                    <tr>
+                                        <td><button id="memory-unit-breakpoint">Br</button></td>
+                                        <td>x3002</td>
+                                        <td>Go</td>
+                                        <td>x0000</td>
+                                        <td>NOP</td>
+                                    </tr>
+                                </table>
                             </div>
                         </div>
+                    </section>
+                    <section>
+                        <h2>Upload</h2>
                     </section>
                 </div>
                 <div class="w50 right">
