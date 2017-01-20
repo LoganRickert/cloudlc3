@@ -1,8 +1,17 @@
 
 class MemoryCell {
     constructor(label, hex) {
-        this.label = label;
-        this.hex = hex;
+        if (label) {
+            this.label = label;
+        } else {
+            this.label = "";
+        }
+        
+        if (hex) {
+            this.hex = hex;
+        } else {
+            this.hex = 0xffff;
+        }
     }
     
     getLabel() {
@@ -15,20 +24,15 @@ class MemoryCell {
 }
 
 class Memory {
-    constructor(memLength ) {
+    constructor(memLength) {
         this.memLength = memLength;
         this.memory = {
-            0x3003: new MemoryCell("", 0x000f)
+            0x3003: new MemoryCell("", 0x000f),
+            0x3000: new MemoryCell("", 0b0001000000100111)
         };
     }
     
-    getLabel(m) {
-        return this.memory[m] ?
-            this.memory[m].getLabel() : "";
-    }
-     
-    getHex(m) {
-        return this.memory[m] ?
-            this.memory[m].getHex() : 0xffff;
+    getMemoryCell(i) {
+        return this.memory[i] ? this.memory[i] : new MemoryCell();
     }
 }

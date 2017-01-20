@@ -13,6 +13,8 @@ function itosh(i) {
 
 var memory = new Memory(0xffff);
 
+var machine = new Machine();
+
 // Starting memory address
 var sm = 0x3000;
 
@@ -40,8 +42,8 @@ function loadMemory(sm) {
         newInner += "<tr>\
             <td><button id='memory-unit-breakpoint'>Br</button></td>\
             <td>" + itosh(i) + "</td>\
-            <td>" + memory.getLabel(i) + "</td>\
-            <td>" + itosh(memory.getHex(i)) + "</td>\
+            <td>" + machine.getMemoryCell(i).getLabel() + "</td>\
+            <td>" + itosh(machine.getMemoryCell(i).getHex()) + "</td>\
             <td>NOP</td>";
         newInner += "</tr>";
     }
@@ -50,3 +52,5 @@ function loadMemory(sm) {
 }
 
 loadMemory(sm);
+
+machine.step();
