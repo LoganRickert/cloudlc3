@@ -1,24 +1,4 @@
 
-var instructionSet = {
-    "add": 0x1,
-    "and": 0x5,
-    "br": 0x0,
-    "jmp": 0xc,
-    "jsp": 0x4,
-    "jsrr": 0x4,
-    "ld": 0x2,
-    "ldi": 0xa,
-    "ldr": 0x6,
-    "lea": 0xe,
-    "not": 0x9,
-    "ret": 0xc,
-    "rti": 0x8,
-    "st": 0x3,
-    "sti": 0xb,
-    "str": 0x7,
-    "trap": 0xf
-}
-
 class Register {
     constructor(width) {
         this.value = 0;
@@ -36,6 +16,10 @@ class Register {
     getValue() {
         return this.value;
     }
+    
+    changeValue(delta) {
+        this.setValue(this.value + delta);
+    }
 }
 
 class CPU {
@@ -48,6 +32,7 @@ class CPU {
         this.psr = new Register(width);
         
         this.setPC(0x3000);
+        this.cc = 0;
     }
     
     createRegisters(regCount, width) {
@@ -66,36 +51,85 @@ class CPU {
         return this.pc.getValue();
     }
     
+    setIR(value) {
+        this.ir.setValue(value);
+    }
+    
+    getIR() {
+        return this.ir.getValue();
+    }
+    
+    getPSR() {
+        return this.psr.getValue();
+    }
+    
     accPC() {
         this.pc.acc();
     }
     
-    exec(instruction) {
-        console.log(itosh(instruction));
+    getRegister(i) {
+        return this.registers[i]
+    }
+    
+    setCC(c) {
+        this.cc = c;
+    }
+    
+    getCC() {
+        return this.cc;
+    }
+    
+    exec(memory) {
+        var instruction = this.ir.getValue();
+        this.accPC();
         
         var ins = (instruction & 0xf000) >> 12;
         var arg = (instruction & 0x0fff);
         
-        console.log(itosh(ins));
-        
         switch(ins) {
             // Add
             case instructionSet["add"]:
-                console.log("adding...");
                 this.add(arg);
                 break;
+            case instructionSet["not"]:
+                this.not(arg);
+                break;
+            case instructionSet["and"]:
+                this.and(arg);
+                break;
+            case instructionSet["lea"]:
+                this.lea(arg);
+                break;
+            case 0x0:
+                this.br(arg);
+                break;
+            case instructionSet["ld"]:
+                this.ld(arg, memory);
+                break;
+            case instructionSet["ldi"]:
+                this.ldi(arg, memory);
+                break;
+            case instructionSet["ldr"]:
+                this.ldr(arg, memory);
+                break;
+            case instructionSet["st"]:
+                this.st(arg, memory);
+                break;
+            case instructionSet["sti"]:
+                this.sti(arg, memory);
+                break;
+            case instructionSet["str"]:
+                this.str(arg, memory);
+                break;
             default:
-                console.log("Command not found...");
                 break;
         }
-        
-        this.accPC();
     }
     
     add(arg) {
-        var type = arg & 0b100000;
-        var dr = arg & 0b111000000000;
-        var sr1 = arg & 0b111000000;
+        var type = (arg & 0b100000) >> 5;
+        var dr = (arg & 0b111000000000) >> 9;
+        var sr1 = (arg & 0b111000000) >> 6;
         
         var toadd = 0;
         
@@ -105,12 +139,148 @@ class CPU {
             var sr2 = arg & 0b111;
             toadd = this.registers[sr2].getValue();
         } else {
-            toadd = arg & 0b11111;
+            toadd = this.bextend(arg & 0b11111, 5);
         }
         
         var sr1v = this.registers[sr1].getValue();
         this.registers[dr].setValue(sr1v + toadd);
         
+        this.newCC(this.registers[dr].getValue());
+    }
+    
+    and(arg) {
+        var type = (arg & 0b100000) >> 5;
+        var dr = (arg & 0b111000000000) >> 9;
+        var sr1 = (arg & 0b111000000) >> 6;
+        
+        var toadd = 0;
+        
+        // type = 0 - register add
+        // type = 1 - imm5
+        if (type == 0) {
+            var sr2 = arg & 0b111;
+            toadd = this.registers[sr2].getValue();
+        } else {
+            toadd = this.bextend(arg & 0b11111, 5);
+        }
+        
+        var sr1v = this.registers[sr1].getValue();
+        this.registers[dr].setValue(sr1v & toadd);
+        
+        this.newCC(this.registers[dr].getValue());
+        
         console.log(this.registers[dr].getValue());
+    }
+    
+    not(arg) {
+        var dr = (arg & 0b111000000000) >> 9;
+        var sr1 = (arg & 0b111000000) >> 6;
+        
+        this.registers[dr].setValue(~this.registers[sr1].getValue());
+        
+        this.newCC(this.registers[dr].getValue());
+    }
+    
+    lea(arg) {
+        var dr = (arg & 0b111000000000) >> 9;
+        var offset = this.bextend(arg & 0x1ff, 9);
+        
+        this.registers[dr].setValue(this.getPC() + offset);
+        
+        this.newCC(this.registers[dr].getValue());
+    }
+    
+    br(arg) {
+        var n = (arg & 0b100000000000) >> 11;
+        var z = (arg & 0b010000000000) >> 10;
+        var p = (arg & 0b001000000000) >> 9;
+        var offset = this.bextend(arg & 0x1ff, 9);
+        
+        if (this.cc & 0b100 && n === 1 ||
+            this.cc & 0b010 && z === 1 ||
+            this.cc & 0b001 && p === 1) {
+            this.pc.changeValue(offset-1);
+        }
+    }
+    
+    ld(arg, memory) {
+        var dr = (arg & 0b111000000000) >> 9;
+        var offset = this.bextend(arg & 0x1ff, 9);
+        
+        this.registers[dr].setValue(memory.getMemoryCell(this.getPC() + offset).getHex());
+        
+        this.newCC(this.registers[dr].getValue());
+    }
+    
+    ldi(arg, memory) {
+        var dr = (arg & 0b111000000000) >> 9;
+        var offset = this.bextend(arg & 0x1ff, 9);
+        
+        var mem = memory.getMemoryCell(this.getPC() + offset).getHex()
+        
+        this.registers[dr].setValue(memory.getMemoryCell(mem).getHex());
+        
+        this.newCC(this.registers[dr].getValue());
+    }
+    
+    ldr(arg, memory) {
+        var dr = (arg & 0b111000000000) >> 9;
+        var sr = (arg & 0b111000000) >> 6;
+        var offset = this.bextend(arg & 0x2f, 6);
+        
+        var rv = this.registers[sr].getValue();
+        
+        var mem = memory.getMemoryCell(rv + offset).getHex();
+        
+        this.registers[dr].setValue(mem);
+        
+        this.newCC(this.registers[dr].getValue());
+    }
+    
+    st(arg, memory) {
+        var sr = (arg & 0b111000000000) >> 9;
+        var offset = this.bextend(arg & 0x1ff, 9);
+        sr = this.registers[sr].getValue();
+        
+        memory.updateMemoryCell(this.getPC() + offset, sr);
+    }
+    
+    sti(arg, memory) {
+        var sr = (arg & 0b111000000000) >> 9;
+        var offset = this.bextend(arg & 0x1ff, 9);
+        sr = this.registers[sr].getValue();
+        
+        var mem = memory.getMemoryCell(this.getPC() + offset).getHex();
+        
+        memory.updateMemoryCell(mem, sr);
+    }
+    
+    str(arg, memory) {
+        var dr = (arg & 0b111000000000) >> 9;
+        var sr = (arg & 0b111000000) >> 6;
+        var offset = this.bextend(arg & 0x2f, 6);
+        var rv = this.registers[sr].getValue();
+        
+        memory.updateMemoryCell(rv + offset, this.registers[dr].getValue());
+    }
+    
+    newCC(v) {
+        var sign = ((v & 0xffff) >> 0xf) === 1 ? -1 : 1;
+        
+        if (v === 0) this.setCC(0b010);
+        else if (sign < 0) this.setCC(0b100);
+        else if (sign > 0) this.setCC(0b001);
+    }
+    
+    bextend(v, a) {
+        
+        var b = v.toString(2)
+        if ((v >> (a-1))) {
+            while (b.length < 16) {
+                b = "1" + b;
+            }
+        }
+        
+        return parseInt(b, 2);
     }
 }
