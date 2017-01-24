@@ -8,6 +8,11 @@ h1, h2, h3, h4, p {
     margin: 0;
 }
 
+main h1 {
+    padding: 20px;
+    font-size: 36px;
+}
+
 .wrapper {
     max-width: 1200px;
     margin: 0 auto;
@@ -16,7 +21,44 @@ h1, h2, h3, h4, p {
 header {
     background: #333;
     color: #eee;
+    overflow: hidden;
+    float: left;
+    width: 100%;
+}
+
+header h1 {
+    padding: 20px 0;
+    float: left;
+}
+
+header ul {
+    float: right;
+}
+
+header ul li {
+    list-style-type: none;
+    float: left;
+    font-size: 18px;
+    padding: 13px 0;
+}
+
+header a {
+    color: #fff;
+    text-decoration: none;
     padding: 20px;
+    transition: background 0.25s ease;
+}
+
+header li a {
+    padding: 30px 20px;
+}
+
+header a:hover {
+    background: #222;
+}
+
+main {
+    clear: both;
 }
 
 main section {
@@ -222,6 +264,10 @@ main h2 {
     font-size: 16px;
     background: #eee;
     color: #333;
+}
+
+#gui {
+    display: none;
 }
 
 .unit .gui {

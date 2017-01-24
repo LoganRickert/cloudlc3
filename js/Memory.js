@@ -186,19 +186,26 @@ class Memory {
             
             // GUI Status -- Ready for next
             0xFE10: 0x8000,
-            // GUI Data -- What to write.
-            // 16-12: Height
-            // 11-8: Width
-            // 7-4: Y
-            // 3-0: X
+            // GUI Data
+            // Write to this to output to screen.
+            // 16-8: y
+            // 7-0: x
             0xFE11: 0x0,
+            
+            // 16-8: height
+            // 7-0: width
+            0xFE12: 0x0101,
+            
             // GUI Color -- What color to write
-            // xff = R, x00ff = G
-            0xFE12: 0xDDDD,
-            // xff = B, x00ff = A / 256
-            0xFE13: 0xDDFF,
+            // xf000 = r
+            // xf00 = g
+            // xf0 = b
+            // xf = a
+            0xFE13: 0xDDDF,
             // Clear screen -- Write #1
-            0xFE14: 0x0
+            0xFE14: 0x0,
+            // Toggle GUI. x8000 On, x0 off
+            0xFE15: 0x0
         };
         
         for (var i in this.memory) {
@@ -244,20 +251,24 @@ class Memory {
             outputKey(x);
         } else if (i == 0xFE14) {
             gui.clear();
+        } else if (i == 0xFE16) {
+            if (x === 0) gui.hide();
+            else gui.show();
         } else if (i == 0xFE11) {
-            var h = (x & 0xf000) >> 3;
-            var w = (x & 0xf00) >> 2;
-            var y = (x & 0xf0) >> 1;
-            var x = (x & 0xf);
+            var py = (x & 0xff00) >> 8;
+            var px = (x & 0xff);
             
-            var c1 = this.getMemoryCell(0xFE12, true);
-            var c2 = this.getMemoryCell(0xFE13, true);
-            var r = (c1 & 0xff00) >> 2;
-            var g = (c1 & 0xff);
-            var b = (c2 & 0xff00) >> 2;
-            var a = (c2 & 0xff);
+            var wh = this.getMemoryCell(0xFE12, true).getHex();
+            var h = (wh & 0xff00) >> 8;
+            var w = (wh & 0xff);
             
-            draw(x, y, w, h, r, g, b, a);
+            var c = this.getMemoryCell(0xFE13, true).getHex();
+            var r = (c & 0xf000) >> 12;
+            var g = (c & 0xf00) >> 8;
+            var b = (c & 0xf0) >> 4;
+            var a = (c & 0xf);
+        
+            gui.draw(px, py, w, h, r, g, b, a/15);
         }
         else {
             var g = this.getMemoryCell(i);

@@ -217,6 +217,8 @@ function hardReset() {
         machine.setPC(getDefaultPC());
     }
     
+    gui.hide();
+    gui.clear();
     clearInterval(running);
     running = 0;
     document.getElementById('console-output').value = "";
