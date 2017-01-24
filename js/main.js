@@ -20,7 +20,8 @@ var paddingOffset = 0;
 var filesLoaded = 0;
 
 function itosh(i) {
-    return "x" + (i | 0x10000).toString(16).substr(1,4).toUpperCase();
+    var hexString = (i | 0x10000).toString(16).substr(1,4).toUpperCase();
+    return "x" + hexString;
 }
 
 var gui = new GUI(document.getElementById("gui-output"));
@@ -102,8 +103,6 @@ function actualErrorCheck(el) {
                 var instruction = fb.instructions[inst]
                 if (instruction.hex.error) {
                     asmE += "<span class='tooltip'>" + asmSpacer + "E<div class='tooltiptext'>" + instruction.hex.error + "</div></span>";
-                    // asmE += "<span class='tooltip'>T</span>"
-                    
                 }
             }
         } // else {
@@ -214,12 +213,17 @@ function loadMemory() {
         
         var mcell = machine.getMemoryCell(i);
         
-        newInner += "<td><button id='memory-unit-breakpoint'>Br</button></td>\
+        var ihex = itosh(mcell.getHex())
+        var ilabel = itosh(mcell.getHex())
+        var iinstruction = decoder.decode(mcell.getHex(), i, machine.getMemory(), machine.getCPU())
+        var iascii = String.fromCharCode((mcell.getHex() & 0xff00) >> 8) + String.fromCharCode(mcell.getHex() & 0xff)
+        
+        newInner += "<td><button id='memory-unit-breakpoint'>B</button></td>\
             <td>" + itosh(i) + "</td>\
-            <td colspan='2'>" + mcell.getLabel() + "</td>\
-            <td>" + itosh(mcell.getHex()) + "</td>\
-            <td colspan='3'>" + decoder.decode(mcell.getHex(), i, machine.getMemory(), machine.getCPU()) + "</td>\
-            <td>" + String.fromCharCode((mcell.getHex() & 0xff00) >> 8) + String.fromCharCode(mcell.getHex() & 0xff) + "</td>";
+            <td colspan='2'>" + ilabel + "</td>\
+            <td><span class='edittip'>" + ihex + "<div class='tooltiptext'><input type='text' value='" + ihex + "'><button onclick='changeMemory(this, " + i + ", 0)'>Edit</button></div></span></td>\
+            <td colspan='3'><span class='edittip'>" + iinstruction + "<div class='tooltiptext'><input type='text' value='" + iinstruction + "'><button onclick='changeMemory(this, " + i + ", 1)'>Edit</button></div></td>\
+            <td><span class='edittip'>" + getPrintableAscii(iascii) + "<div class='tooltiptext'><input type='text' value='" + iascii + "'><button onclick='changeMemory(this, " + i + ", 2)'>Edit</button></div></span></td>";
         newInner += "</tr>";
     }
     
@@ -235,18 +239,20 @@ function loadRegisters() {
     
     for (var i = 0; i < registerCount; i++) {
         var v = machine.getRegister(i).getValue();
+        var ihex = itosh(v);
         newInner += "<tr>\
             <td>R" + i + "</td>\
-            <td>" + itosh(v) + "</td>\
+            <td><span class='edittip'>" + ihex + "<div class='tooltiptext'><input type='text' value='" + ihex + "'><button onclick='changeRegister(this, " + i + ")'>Edit</button></div></span></td>\
             <td>" + v + "</td>\
             <td colspan='2'>" + String.fromCharCode(v) + "</td>";
         newInner += "</tr>";
     }
     
     var v = machine.getPC();
+    var ihex = itosh(v);
     newInner += "<tr>\
         <td>PC</td>\
-        <td>" + itosh(v) + "</td>\
+        <td><span class='edittip'>" + ihex + "<div class='tooltiptext'><input type='text' value='" + ihex + "'><button onclick='changeRegister(this, 8)'>Edit</button></div></span></td>\
         <td>" + v + "</td>\
         <td colspan='2'>" + String.fromCharCode(v) + "</td>";
     newInner += "</tr>";
@@ -268,6 +274,96 @@ function loadRegisters() {
     newInner += "</tr>";
     
     el.innerHTML = newInner;
+}
+
+function getPrintableAscii(c) {
+    var newc = "";
+    
+    if (c.length > 0) {
+        newc += c.charCodeAt(0) < 32 ? "&diams;" : c[0];
+    }
+    if (c.length > 1) {
+        newc += c.charCodeAt(1) < 32 ? "&diams;" : c[1];
+    }
+        
+    return newc;
+}
+
+function changeMemory(el, memAddr, type) {
+    var newValue = $(el).parent().children("input")[0].value;
+    
+    if (type == 0) {
+        machine.getMemory().updateMemoryCell(memAddr, _toint(newValue));
+    } else if (type == 1) {
+        console.log(".orig " + itosh(memAddr) + "\n" + newValue);
+        machine.loadAsm(".orig " + itosh(memAddr) + "\n" + newValue);
+    } else if (type == 2) {
+        var nv = 0;
+        
+        if (newValue.length == 1) {
+            nv += newValue.charCodeAt(0);
+        } else if (newValue.length > 1) {
+            nv += newValue.charCodeAt(0) << 8;
+            nv += newValue.charCodeAt(1);
+        }
+        
+        machine.getMemory().updateMemoryCell(memAddr, nv);
+    }
+    
+    refreshView();
+}
+
+function changeRegister(el, reg) {
+    var newValue = _toint($(el).parent().children("input")[0].value);
+    
+    if (reg >= 0 && reg <= 7) {
+        machine.getCPU().setRegister(reg, newValue);
+    } else if (reg == 8) {
+        machine.setPC(newValue);
+    }
+    
+    refreshView();
+}
+
+function _toint(n, bit = -1, mask = -1) {
+    var num = NaN;
+    
+    if (n.length >= 2) {
+        if (n[0] == "x") {
+            n = n.slice(1);
+            if (n.match("[0-9A-F]+")) {
+                num = parseInt(n, 16);
+            }
+        } else if (n[0] == "#") {
+            var sign = 1;
+            
+            if (n.length >= 3 && n[1] === '-') {
+                sign = -1;
+                n = n.slice(2);
+            } else {
+                n = n.slice(1);
+            }
+            
+            num = sign * parseInt(n);
+        }
+    }
+    
+    num &= 0xffff;
+    
+    if (bit > 0) {
+        var t = (num << (16 - bit)) & 0xffff;
+        t = t >> (16 - bit);
+        t = t >> (bit - 1);
+        
+        if (!isNaN(num) && bit > 0 && t === 1) {
+            num ^= 0xffff;
+            num += 1;
+            num = num * -1;
+        }
+    }
+    
+    
+    return num;
 }
 
 function refreshView(shift = 0) {
@@ -447,6 +543,11 @@ function outputKey(k) {
 
 loadAllFiles();
 refreshView();
+
+$("#memory-unit-jump").keyup(function(e) {
+    sm = _toint(this.value);
+    refreshView();
+});
 
 var consoleta = document.getElementById('console-output');
 consoleta.scrollTop = consoleta.scrollHeight;

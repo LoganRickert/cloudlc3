@@ -79,6 +79,10 @@ class CPU {
         return this.cc;
     }
     
+    setRegister(i, x) {
+        this.registers[i].setValue(x);
+    }
+    
     exec(memory) {
         var instruction = this.ir.getValue();
         this.accPC();

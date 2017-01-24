@@ -231,7 +231,11 @@ main .infolist li:hover a {
     background: #333;
 }
 
-.tooltip .tooltiptext {
+.edittip {
+
+}
+
+.tooltiptext {
     background-color: black;
     color: #fff;
     text-align: left;
@@ -247,7 +251,24 @@ main .infolist li:hover a {
     transition: all 0.5s ease;
 }
 
-.tooltip:hover .tooltiptext {
+.tooltiptext input[type="text"] {
+    padding: 5px;
+    background: #fff;
+    color: #333;
+    margin: 0;
+    font-size: 16px;
+    width: 100px;
+}
+
+.tooltiptext button {
+    background: #fff;
+    color: #333;
+    padding: 5px;
+    margin: 0;
+    font-size: 16px;
+}
+
+.tooltip:hover .tooltiptext, .edittip:hover .tooltiptext {
     /*display: inline;*/
     visibility: visible;
     opacity: 1;
