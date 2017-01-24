@@ -11,7 +11,7 @@ var reverseAsmSet = {
 }
 
 class Decoder {
-    decode(instruction, addr) {
+    decode(instruction, addr, memory, cpu) {
         var asm = "NOP";
         
         if (instruction == 0xffff) {
@@ -36,25 +36,25 @@ class Decoder {
                     asm = this.lea(arg, addr);
                     break;
                 case instructionSet["ld"]:
-                    asm = this.ld(arg, addr);
+                    asm = this.ld(arg, addr, memory, cpu);
                     break;
                 case instructionSet["ldi"]:
-                    asm = this.ldi(arg, addr);
+                    asm = this.ldi(arg, addr, memory, cpu);
                     break;
                 case instructionSet["ldr"]:
-                    asm = this.ldr(arg, addr);
+                    asm = this.ldr(arg, addr, memory, cpu);
                     break;
                 case instructionSet["st"]:
-                    asm = this.st(arg, addr);
+                    asm = this.st(arg, addr, memory, cpu);
                     break;
                 case instructionSet["sti"]:
-                    asm = this.sti(arg, addr);
+                    asm = this.sti(arg, addr, memory, cpu);
                     break;
                 case instructionSet["str"]:
-                    asm = this.str(arg, addr);
+                    asm = this.str(arg, addr, memory, cpu);
                     break;
                 case 0:
-                    asm = this.br(arg, addr);
+                    asm = this.br(arg, addr, memory, cpu);
                     break;
                 default:
                     break;
@@ -141,14 +141,16 @@ class Decoder {
         return asm;
     }
     
-    ld(arg, addr) {
+    ld(arg, addr, memory, cpu) {
         var asm = "";
         var dr = (arg & 0b111000000000) >> 9;
         var pcoffset = this.getSigned(arg & 0x1ff, 9, 0xff);
         addr += 1
         
+        var m = memory.getMemoryCell(addr + pcoffset).getHex()
+        
         if (predict) {
-            asm += "R" + dr + " = m[" + itosh(addr + pcoffset) + "]";
+            asm += "R" + dr + " = " + itosh(m) + " (" + String.fromCharCode((m & 0xff00) >> 8) + String.fromCharCode(m & 0xff) + ")";
         } else {
             var asm = "LD ";
             asm += "R" + dr + ", #" + pcoffset;
@@ -157,14 +159,17 @@ class Decoder {
         return asm;
     }
     
-    ldi(arg, addr) {
+    ldi(arg, addr, memory, cpu) {
         var asm = "";
         var dr = (arg & 0b111000000000) >> 9;
         var pcoffset = this.getSigned(arg & 0x1ff, 9, 0xff);
         addr += 1
         
+        var m = memory.getMemoryCell(addr + pcoffset).getHex();
+        m = memory.getMemoryCell(m).getHex();
+        
         if (predict) {
-            asm += "R" + dr + " = m[m[" + itosh(addr + pcoffset) + "]]";
+            asm += "R" + dr + " = " + itosh(m) + " (" + String.fromCharCode((m & 0xff00) >> 8) + String.fromCharCode(m & 0xff) + ")";
         } else {
             var asm = "LDI ";
             asm += "R" + dr + ", #" + pcoffset;
@@ -173,14 +178,18 @@ class Decoder {
         return asm;
     }
     
-    ldr(arg, addr) {
+    ldr(arg, addr, memory, cpu) {
         var asm = "";
         var dr = (arg & 0b111000000000) >> 9;
         var sr = (arg & 0b111000000) >> 6;
         var offset = this.getSigned(arg & 0x2f, 6, 0x7f);
         
+        var add = cpu.getRegister(sr).getValue() + offset;
+        var m = memory.getMemoryCell(add).getHex();
+        
         if (predict) {
-            asm += "R" + dr + " = m[R" + sr + " + " + itosh(offset) + "]";
+            asm += "R" + dr + " = " + itosh(m) + " (" + String.fromCharCode((m & 0xff00) >> 8) + String.fromCharCode(m & 0xff) + ")";
+            // asm += "R" + dr + " = m[R" + sr + " + " + itosh(offset) + "]";
         } else {
             var asm = "LDR ";
             asm += "R" + dr + ", R" + sr + ", #" + offset;
@@ -189,14 +198,14 @@ class Decoder {
         return asm;
     }
     
-    st(arg, addr) {
+    st(arg, addr, memory, cpu) {
         var asm = "";
         var dr = (arg & 0b111000000000) >> 9;
         var pcoffset = this.getSigned(arg & 0x1ff, 9, 0xff);
         addr += 1
         
         if (predict) {
-            asm += "m[" + itosh(addr + pcoffset) + "] = R" + dr;
+            asm += "m[" + itosh(addr + pcoffset) + "] = " + itosh(cpu.getRegister(dr).getValue());
         } else {
             var asm = "ST ";
             asm += "R" + dr + ", #" + pcoffset;
@@ -205,14 +214,16 @@ class Decoder {
         return asm;
     }
     
-    sti(arg, addr) {
+    sti(arg, addr, memory, cpu) {
         var asm = "";
         var dr = (arg & 0b111000000000) >> 9;
         var pcoffset = this.getSigned(arg & 0x1ff, 9, 0xff);
         addr += 1
         
+        var m = m = memory.getMemoryCell(addr + pcoffset).getHex();
+        
         if (predict) {
-            asm += "m[m[" + itosh(addr + pcoffset) + "]] = R" + dr;;
+            asm += "m[" + itosh(m) + "] = " + itosh(cpu.getRegister(dr).getValue());
         } else {
             var asm = "STI ";
             asm += "R" + dr + ", #" + pcoffset;
@@ -221,14 +232,14 @@ class Decoder {
         return asm;
     }
     
-    str(arg, addr) {
+    str(arg, addr, memory, cpu) {
         var asm = "";
         var dr = (arg & 0b111000000000) >> 9;
         var sr = (arg & 0b111000000) >> 6;
         var offset = this.getSigned(arg & 0x2f, 6, 0x7f);
         
         if (predict) {
-            asm += "m[R" + sr + " + " + itosh(offset) + "] = " + "R" + dr;
+            asm += "m[R" + sr + " + " + itosh(offset) + "] = " + itosh(cpu.getRegister(dr).getValue());
         } else {
             var asm = "STR ";
             asm += "R" + dr + ", R" + sr + ", #" + offset;
@@ -237,7 +248,7 @@ class Decoder {
         return asm;
     }
     
-    br(arg, addr) {
+    br(arg, addr, memory, cpu) {
         var asm = "";
         var n = (arg & 0b100000000000) >> 11;
         var z = (arg & 0b010000000000) >> 10;
@@ -245,8 +256,24 @@ class Decoder {
         
         var pcoffset = this.getSigned(arg & 0x1ff, 9, 0xff);
         
+        var cc = cpu.getCC();
+        var isn = (cc & 0b100) >> 2;
+        var isz = (cc & 0b10) >> 1;
+        var isp = cc & 0b1;
+        
         if (predict) {
-            asm = "BR";
+            asm = "";
+            
+            if ((isn === 1 && n === 1) ||
+                (isz === 1 && z === 1) ||
+                (isp === 1 && p === 1)
+                ) {
+                    asm += "[T] ";
+                } else {
+                    asm += "[F] ";
+                }
+            
+            asm += "BR";
             
             if (n) asm += "n";
             if (z) asm += "z";

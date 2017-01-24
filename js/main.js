@@ -2,9 +2,9 @@
 var mtr = "<tr>\
     <th></th>\
     <th>Addr</th>\
-    <th>Label</th>\
+    <th colspan='2'>Label</th>\
     <th>Hex</th>\
-    <th>Instruction</th>\
+    <th colspan='3'>Instruction</th>\
     <th>ASCII</th>\
 </tr>";
 
@@ -12,7 +12,7 @@ var rtr = "<tr>\
     <th>Name</th>\
     <th>Hex</th>\
     <th>Dec</th>\
-    <th>ASCII</th>\
+    <th colspan='2'>ASCII</th>\
 </tr>";
 
 var paddingOffset = 0;
@@ -26,33 +26,28 @@ var codeFiles = [
         .ORIG   x3000
 
 	; Print prompt
-prompt	ld r0 arrow
-	sti r0 c
-	ld r0 space
-	sti r0 c
+prompt	LD R0 arrow
+	OUT
+	LD R0 space
+	OUT
 
 	; Get user input and print it out
-start	ldi r0 a
-	brzp start
-	ldi r0 b
-	sti r0 c
+start	GETC
+	OUT
 
 	; If enter, print prompt again
-	ld r1 enter
-	not r1 r1
-	add r1 r1 #1
-	add r0 r0 r1
-	brz prompt
+	LD R1 enter
+	NOT R1 R1
+	add R1 R1 #1
+	add R0 R0 R1
+	BRz prompt
 
 	; Not enter, just get next character
-	brnzp start
+	BRnzp start
 
 	HALT
 
 	; Variables
-a	.fill xfe00
-b	.fill xfe02
-c	.fill xfe06
 arrow	.fill x3e
 space	.fill x20
 enter	.fill x0d
@@ -66,6 +61,8 @@ function itosh(i) {
     return "x" + (i | 0x10000).toString(16).substr(1,4).toUpperCase();
 }
 
+var gui = new GUI(document.getElementById("gui-output"));
+
 var decoder = new Decoder();
 
 var machine = new Machine();
@@ -78,6 +75,8 @@ var fpc = false;
 
 function followPC() {
     fpc = !fpc;
+    
+    refreshView();
 }
 
 function shiftMemory(delta) {
@@ -110,6 +109,56 @@ function run() {
         clearInterval(running);
         running = 0;
     }
+}
+
+var errorChecking = 0;
+
+function checkForErrors() {
+    if (errorChecking === 0) {
+        errorChecking = setInterval(function() {
+            checkErrors();
+            clearInterval(errorChecking);
+            errorChecking = 0;
+            }, 1500);
+    }
+}
+
+function actualErrorCheck(el) {
+    var asmCommands = el.value.replace(/\r/g, "").split("\n");
+    var asmP = new AsmParser();
+    var asmE = "";
+    var asmSpacerLength = asmCommands.length.toString().length;
+    var asmSpacer = new Array(asmSpacerLength).join(" ");
+    
+    for (var i = 0; i < asmCommands.length; i++) {
+        var asmLine = asmCommands[i];
+        
+        var fb = asmP.parse(".orig x0\n" + asmLine);
+        
+        if (!fb.errors) {
+            for (var inst in fb.instructions) {
+                var instruction = fb.instructions[inst]
+                if (instruction.hex.error) {
+                    asmE += "<span class='tooltip'>" + asmSpacer + "E<div class='tooltiptext'>" + instruction.hex.error + "</div></span>";
+                    // asmE += "<span class='tooltip'>T</span>"
+                    
+                }
+            }
+        } // else {
+        //     asmE += asmSpacer + "W";
+        // }
+        
+        asmE += "\n";
+    }
+    
+    $(el).parent().find(".line-warnings")[0].innerHTML = asmE;
+}
+
+function checkErrors() {
+    console.log("Checking for le errors");
+    $(".code-edit textarea").each(function(){
+        actualErrorCheck(this);
+    });
 }
 
 function getDefaultPC() {
@@ -203,9 +252,9 @@ function loadMemory() {
         
         newInner += "<td><button id='memory-unit-breakpoint'>Br</button></td>\
             <td>" + itosh(i) + "</td>\
-            <td>" + mcell.getLabel() + "</td>\
+            <td colspan='2'>" + mcell.getLabel() + "</td>\
             <td>" + itosh(mcell.getHex()) + "</td>\
-            <td>" + decoder.decode(mcell.getHex(), i) + "</td>\
+            <td colspan='3'>" + decoder.decode(mcell.getHex(), i, machine.getMemory(), machine.getCPU()) + "</td>\
             <td>" + String.fromCharCode((mcell.getHex() & 0xff00) >> 8) + String.fromCharCode(mcell.getHex() & 0xff) + "</td>";
         newInner += "</tr>";
     }
@@ -226,7 +275,7 @@ function loadRegisters() {
             <td>R" + i + "</td>\
             <td>" + itosh(v) + "</td>\
             <td>" + v + "</td>\
-            <td>" + String.fromCharCode(v) + "</td>";
+            <td colspan='2'>" + String.fromCharCode(v) + "</td>";
         newInner += "</tr>";
     }
     
@@ -235,7 +284,7 @@ function loadRegisters() {
         <td>PC</td>\
         <td>" + itosh(v) + "</td>\
         <td>" + v + "</td>\
-        <td>" + String.fromCharCode(v) + "</td>";
+        <td colspan='2'>" + String.fromCharCode(v) + "</td>";
     newInner += "</tr>";
     
     var v = machine.getCC();
@@ -243,7 +292,7 @@ function loadRegisters() {
         <td>CC</td>\
         <td>" + ((v & 0b100) >> 2) + " " + ((v & 0b10) >> 1) + " " + (v & 0b1) + " " + "</td>\
         <td></td>\
-        <td></td>";
+        <td colspan='2'></td>";
     newInner += "</tr>";
     
     var v = machine.getIR();
@@ -251,7 +300,7 @@ function loadRegisters() {
         <td>IR</td>\
         <td>" + itosh(v) + "</td>\
         <td>" + v + "</td>\
-        <td>" + decoder.decode(v) + "</td>";
+        <td colspan='2'>" + decoder.decode(v, machine.getPC(), machine.getMemory(), machine.getCPU()) + "</td>";
     newInner += "</tr>";
     
     el.innerHTML = newInner;
@@ -313,6 +362,9 @@ function changeFontSize(codeArea, delta) {
     el.style.lineHeight = (fs + delta + 4).toString() + "px";
     $(el).parent().find(".line-numbers")[0].style.fontSize = (fs + delta).toString() + "px";
     $(el).parent().find(".line-numbers")[0].style.lineHeight = (fs + delta + 4).toString() + "px";
+    $(el).parent().find(".line-warnings")[0].style.fontSize = (fs + delta).toString() + "px";
+    $(el).parent().find(".line-warnings")[0].style.lineHeight = (fs + delta + 4).toString() + "px";
+    // $(el).parent().find(".line-warnings")[0].style.width = (fs + delta + 4).toString() + "px";
     recalcTextarea(el, true);
 }
 
@@ -349,6 +401,7 @@ function appendFile(name = "", code = "", loadContents = false) {
         <div class="unit-body">
             <div id="code-area-edit` + filesLoaded + `" class="code-edit">
                 <form>
+                    <div class="line-warnings"></div>
                     <div class="line-numbers"></div>
                     <textarea id="code-area-text` + filesLoaded + `">` + code + `</textarea>
                 </form>
@@ -369,6 +422,9 @@ function recalcHandles(el) {
     
     $(el).bind('input propertychange', function() {
         recalcTextarea(this);
+        clearInterval(errorChecking);
+        errorChecking = 0;
+        checkForErrors();
     });
     
     $(el).keydown(function(e) {
@@ -434,6 +490,7 @@ consoleta.scrollTop = consoleta.scrollHeight;
 $(consoleta).keypress(function(e) {
     e.preventDefault();
     machine.keyPressed(e.keyCode);
+    refreshView();
 });
 
 $(consoleta).keydown(function(event) {
@@ -441,3 +498,5 @@ $(consoleta).keydown(function(event) {
      event.preventDefault();
    }
 });
+
+checkErrors();

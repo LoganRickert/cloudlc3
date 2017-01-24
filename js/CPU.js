@@ -87,7 +87,6 @@ class CPU {
         var arg = (instruction & 0x0fff);
         
         switch(ins) {
-            // Add
             case instructionSet["add"]:
                 this.add(arg);
                 break;
@@ -121,6 +120,15 @@ class CPU {
             case instructionSet["str"]:
                 this.str(arg, memory);
                 break;
+            case instructionSet["trap"]:
+                if (arg !== 0x0fff)
+                    this.trap(arg, memory);
+                break;
+            case instructionSet["ret"]:
+            case instructionSet["jmp"]:
+                this.jmp(arg, memory);
+                break;
+            
             default:
                 break;
         }
@@ -207,7 +215,7 @@ class CPU {
         var dr = (arg & 0b111000000000) >> 9;
         var offset = this.bextend(arg & 0x1ff, 9);
         
-        this.registers[dr].setValue(memory.getMemoryCell(this.getPC() + offset).getHex());
+        this.registers[dr].setValue(memory.getMemoryCell(this.getPC() + offset, false).getHex(), false);
         
         this.newCC(this.registers[dr].getValue());
     }
@@ -216,9 +224,9 @@ class CPU {
         var dr = (arg & 0b111000000000) >> 9;
         var offset = this.bextend(arg & 0x1ff, 9);
         
-        var mem = memory.getMemoryCell(this.getPC() + offset).getHex()
+        var mem = memory.getMemoryCell(this.getPC() + offset, false).getHex()
         
-        this.registers[dr].setValue(memory.getMemoryCell(mem).getHex());
+        this.registers[dr].setValue(memory.getMemoryCell(mem, false).getHex());
         
         this.newCC(this.registers[dr].getValue());
     }
@@ -230,7 +238,7 @@ class CPU {
         
         var rv = this.registers[sr].getValue();
         
-        var mem = memory.getMemoryCell(rv + offset).getHex();
+        var mem = memory.getMemoryCell(rv + offset, false).getHex();
         
         this.registers[dr].setValue(mem);
         
@@ -250,7 +258,7 @@ class CPU {
         var offset = this.bextend(arg & 0x1ff, 9);
         sr = this.registers[sr].getValue();
         
-        var mem = memory.getMemoryCell(this.getPC() + offset).getHex();
+        var mem = memory.getMemoryCell(this.getPC() + offset, false).getHex();
         
         memory.updateMemoryCell(mem, sr);
     }
@@ -262,6 +270,20 @@ class CPU {
         var rv = this.registers[sr].getValue();
         
         memory.updateMemoryCell(rv + offset, this.registers[dr].getValue());
+    }
+    
+    trap(arg, memory) {
+        var offset = arg & 0xff;
+        this.registers[0x7].setValue(this.getPC());
+        
+        var to = memory.getMemoryCell(offset, false).getHex();
+        
+        this.setPC(to);
+    }
+    
+    jmp(arg, memory) {
+        var reg = (arg & 0x1c0) >> 6;
+        this.setPC(this.registers[reg].getValue());
     }
     
     newCC(v) {

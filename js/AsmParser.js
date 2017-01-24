@@ -28,16 +28,12 @@ class AsmParser {
                 errors: ["Orig is not a number!"]
             };
         } else {
-            console.log("Orig at: " + orig);
         }
         
         var instructions = {};
         
         var symbols = this._getSymbols(program);
         var rSymbols = this._reverse(symbols);
-        
-        console.log(symbols);
-        console.log(rSymbols);
         
         var addr = orig;
         
@@ -46,9 +42,6 @@ class AsmParser {
             var instruction = program[i];
             var token = instruction[0].toLowerCase();
             var s = 1;
-            
-            console.log(instruction);
-            console.log(token);
             
             if (instructionSet[token] === undefined && !asmSet[token] && token[0] !== '.' && token.match(/[a-z][a-z0-9_]*/)) {
                 // symbol!!!
@@ -59,9 +52,6 @@ class AsmParser {
                     s++;
                 }
             }
-            
-            console.log(token);
-            console.log("? " + instructionSet[token])
             
             if (instructionSet[token] !== undefined) {
                 instruction = this._lower(instruction);
@@ -126,6 +116,24 @@ class AsmParser {
                             label: rSymbols[addr]
                         }
                         break;
+                    case "trap":
+                        instructions[addr] = {
+                            hex: this._trap(instruction.slice(s), symbols, addr),
+                            label: rSymbols[addr]
+                        }
+                        break;
+                    case "ret":
+                        instructions[addr] = {
+                            hex: this._ret(instruction.slice(s), symbols, addr),
+                            label: rSymbols[addr]
+                        }
+                        break;
+                    case "jmp":
+                        instructions[addr] = {
+                            hex: this._jmp(instruction.slice(s), symbols, addr),
+                            label: rSymbols[addr]
+                        }
+                        break;
                     case "br":
                     case "brz":
                     case "brn":
@@ -177,8 +185,6 @@ class AsmParser {
                     
                     var dist = str.length;
                     
-                    console.log("String: " + str);
-                    
                     for (var j = 0; j < dist; j++) {
                         instructions[addr] = {
                             hex: str.charCodeAt(j) & 0xff,
@@ -200,9 +206,48 @@ class AsmParser {
     }
     
     _add(args, symbols, addr) {
-        if (args.length !== 3 || args[0][0] !== 'r' || args[1][0] !== 'r' || args[0].length > 2 || args[1].length > 2) {
+        var error = "";
+        
+        if (args.length < 3 ) {
+            console.log("Not enough args");
+            error += "  &bull; Not enough arguments.\n";
+        }
+        
+        if (args.length > 3 ) {
+            error += "  &bull; Too many arguments.\n";
+        }
+        
+        if (args.length >= 1 && !this._isRegister(args[0])) {
+            error += "  &bull; " + args[0] + " is not a valid register.\n";
+        }
+        
+        if (args.length >= 2 && !this._isRegister(args[1])) {
+            error += "  &bull; " + args[1] + " is not a valid register.\n";
+        }
+        
+        if (args.length >= 3 && !this._isRegister(args[2])) {
+            if (args[2][0] === '#') {
+                if (!this._is_numeric(args[2].substr(1))) {
+                    error += "  &bull; " + args[2] + " is not a valid integer.\n";
+                }
+            } else if (args[2][0] === 'x') {
+                if (!this._is_numeric(args[2].substr(1), true)) {
+                    error += "  &bull; " + args[2] + " is not a valid hex.\n";
+                }
+            } else if (!args[2].match(/[a-z][a-z0-9_]*/)) {
+                error += "  &bull; " + args[2] + " is not a valid label.\n";
+            }
+        }
+        
+        if (error !== "") {
+            var finalError = "Error with ADD '" + args + "'.\n" + error + "\n";
+            finalError += "Syntax:\n";
+            finalError += "  &bull; ADD [DR] [SR1] [SR2|x5]\n";
+            finalError += "Examples:\n";
+            finalError += "  &bull; ADD R0 R0 #1\n";
+            
             return {
-                error: "Error on line " + itosh(addr) + " with ADD '" + args + "'."
+                error: finalError
             }
         }
         
@@ -231,9 +276,34 @@ class AsmParser {
     }
     
     _not(args, symbols, addr) {
-        if (args.length !== 2 || args[0][0] !== 'r' || args[1][0] !== 'r' || args[0].length > 2 || args[1].length > 2) {
+        var error = "";
+        
+        if (args.length < 2 ) {
+            console.log("Not enough args");
+            error += "  &bull; Not enough arguments.\n";
+        }
+        
+        if (args.length > 2 ) {
+            error += "  &bull; Too many arguments.\n";
+        }
+        
+        if (args.length >= 1 && !this._isRegister(args[0])) {
+            error += "  &bull; " + args[0] + " is not a valid register.\n";
+        }
+        
+        if (args.length >= 2 && !this._isRegister(args[1])) {
+            error += "  &bull; " + args[1] + " is not a valid register.\n";
+        }
+        
+        if (error !== "") {
+            var finalError = "Error with AND '" + args + "'.\n" + error + "\n";
+            finalError += "Syntax:\n";
+            finalError += "  &bull; NOT [DR] [SR]";
+            finalError += "Examples:\n";
+            finalError += "  &bull; NOT R0 R0\n";
+            
             return {
-                error: "Error on line " + itosh(addr) + " with NOT '" + args + "'."
+                error: finalError
             }
         }
         
@@ -251,9 +321,44 @@ class AsmParser {
     }
     
     _lea(args, symbols, addr) {
-        if (args.length !== 2 || args[0][0] !== 'r' || args[0].length > 2) {
+        var error = "";
+        
+        if (args.length < 2) {
+            console.log("Not enough args");
+            error += "  &bull; Not enough arguments.\n";
+        }
+        
+        if (args.length > 2) {
+            error += "  &bull; Too many arguments.\n";
+        }
+        
+        if (args.length >= 1 && !this._isRegister(args[0])) {
+            error += "  &bull; " + args[0] + " is not a valid register.\n";
+        }
+        
+        if (args.length >= 2) {
+            if (args[1][0] === '#') {
+                if (!this._is_numeric(args[1].substr(1))) {
+                    error += "  &bull; " + args[1] + " is not a valid integer.\n";
+                }
+            } else if (args[1][0] === 'x') {
+                if (!this._is_numeric(args[1].substr(1), true)) {
+                    error += "  &bull; " + args[1] + " is not a valid hex.\n";
+                }
+            } else if (!args[1].match(/[a-z][a-z0-9_]*/)) {
+                error += "  &bull; " + args[1] + " is not a valid label.\n";
+            }
+        }
+        
+        if (error !== "") {
+            var finalError = "Error with LEA '" + args + "'.\n" + error + "\n";
+            finalError += "Syntax:\n";
+            finalError += "  &bull; LEA [DR] [x9]";
+            finalError += "Examples:\n";
+            finalError += "  &bull; LEA R0 #1\n";
+            
             return {
-                error: "Error on line " + itosh(addr) + " with LEA '" + args + "'."
+                error: finalError
             }
         }
         
@@ -263,14 +368,10 @@ class AsmParser {
         
         var pcoffset = -1;
         
-        console.log("aflkasdfljkasdflf; " + args[1] + " " + symbols[args[1]]);
-        
         if (args[1] in symbols) {
             var b = addr;
             var a = symbols[args[1]];
-            
-            console.log("test: " + (a).toString() + " " + (b).toString() + " " + " " + (a - b).toString() + " " + ((a - b) & 0x1ff).toString());
-            
+
             pcoffset = (a - b) & 0x1ff;
         } else {
             pcoffset = this._toint(args[1]) & 0x1ff;
@@ -283,9 +384,44 @@ class AsmParser {
     }
     
     _ld(args, symbols, addr) {
-        if (args.length !== 2 || args[0][0] !== 'r' || args[0].length > 2) {
+        var error = "";
+        
+        if (args.length < 2) {
+            console.log("Not enough args");
+            error += "  &bull; Not enough arguments.\n";
+        }
+        
+        if (args.length > 2) {
+            error += "  &bull; Too many arguments.\n";
+        }
+        
+        if (args.length >= 1 && !this._isRegister(args[0])) {
+            error += "  &bull; " + args[0] + " is not a valid register.\n";
+        }
+        
+        if (args.length >= 2) {
+            if (args[1][0] === '#') {
+                if (!this._is_numeric(args[1].substr(1))) {
+                    error += "  &bull; " + args[1] + " is not a valid integer.\n";
+                }
+            } else if (args[1][0] === 'x') {
+                if (!this._is_numeric(args[1].substr(1), true)) {
+                    error += "  &bull; " + args[1] + " is not a valid hex.\n";
+                }
+            } else if (!args[1].match(/[a-z][a-z0-9_]*/)) {
+                error += "  &bull; " + args[1] + " is not a valid label.\n";
+            }
+        }
+        
+        if (error !== "") {
+            var finalError = "Error with LD '" + args + "'.\n" + error + "\n";
+            finalError += "Syntax:\n";
+            finalError += "  &bull; LD [DR] [x9]";
+            finalError += "Examples:\n";
+            finalError += "  &bull; LD R0 #1\n";
+            
             return {
-                error: "Error on line " + itosh(addr) + " with LD '" + args + "'."
+                error: finalError
             }
         }
         
@@ -295,13 +431,9 @@ class AsmParser {
         
         var pcoffset = -1;
         
-        console.log("aflkasdfljkasdflf; " + args[1] + " " + symbols[args[1]]);
-        
         if (args[1] in symbols) {
             var b = addr;
             var a = symbols[args[1]] - 1;
-            
-            console.log("test: " + (a).toString() + " " + (b).toString() + " " + " " + (a - b).toString() + " " + ((a - b) & 0x1ff).toString());
             
             pcoffset = (a - b) & 0x1ff;
         } else {
@@ -315,9 +447,44 @@ class AsmParser {
     }
     
     _ldi(args, symbols, addr) {
-        if (args.length !== 2 || args[0][0] !== 'r' || args[0].length > 2) {
+        var error = "";
+        
+        if (args.length < 2) {
+            console.log("Not enough args");
+            error += "  &bull; Not enough arguments.\n";
+        }
+        
+        if (args.length > 2) {
+            error += "  &bull; Too many arguments.\n";
+        }
+        
+        if (args.length >= 1 && !this._isRegister(args[0])) {
+            error += "  &bull; " + args[0] + " is not a valid register.\n";
+        }
+        
+        if (args.length >= 2) {
+            if (args[1][0] === '#') {
+                if (!this._is_numeric(args[1].substr(1))) {
+                    error += "  &bull; " + args[1] + " is not a valid integer.\n";
+                }
+            } else if (args[1][0] === 'x') {
+                if (!this._is_numeric(args[1].substr(1), true)) {
+                    error += "  &bull; " + args[1] + " is not a valid hex.\n";
+                }
+            } else if (!args[1].match(/[a-z][a-z0-9_]*/)) {
+                error += "  &bull; " + args[1] + " is not a valid label.\n";
+            }
+        }
+        
+        if (error !== "") {
+            var finalError = "Error with LDI '" + args + "'.\n" + error + "\n";
+            finalError += "Examples:\n";
+            finalError += "  &bull; LDI [DR] [x9]";
+            finalError += "Examples:\n";
+            finalError += "  &bull; LDI R0 #1\n";
+            
             return {
-                error: "Error on line " + itosh(addr) + " with LD '" + args + "'."
+                error: finalError
             }
         }
         
@@ -327,13 +494,9 @@ class AsmParser {
         
         var pcoffset = -1;
         
-        console.log("aflkasdfljkasdflf; " + args[1] + " " + symbols[args[1]]);
-        
         if (args[1] in symbols) {
             var b = addr;
             var a = symbols[args[1]] - 1;
-            
-            console.log("test: " + (a).toString() + " " + (b).toString() + " " + " " + (a - b).toString() + " " + ((a - b) & 0x1ff).toString());
             
             pcoffset = (a - b) & 0x1ff;
         } else {
@@ -347,9 +510,48 @@ class AsmParser {
     }
     
     _ldr(args, symbols, addr) {
-        if (args.length !== 3 || args[0][0] !== 'r' || args[0].length > 2 || args[1][0] !== 'r' || args[1].length > 2) {
+        var error = "";
+        
+        if (args.length < 3 ) {
+            console.log("Not enough args");
+            error += "  &bull; Not enough arguments.\n";
+        }
+        
+        if (args.length > 3 ) {
+            error += "  &bull; Too many arguments.\n";
+        }
+        
+        if (args.length >= 1 && !this._isRegister(args[0])) {
+            error += "  &bull; " + args[0] + " is not a valid register.\n";
+        }
+        
+        if (args.length >= 2 && !this._isRegister(args[1])) {
+            error += "  &bull; " + args[1] + " is not a valid register.\n";
+        }
+        
+        if (args.length >= 3) {
+            if (args[2][0] === '#') {
+                if (!this._is_numeric(args[2].substr(1))) {
+                    error += "  &bull; " + args[2] + " is not a valid integer.\n";
+                }
+            } else if (args[2][0] === 'x') {
+                if (!this._is_numeric(args[2].substr(1), true)) {
+                    error += "  &bull; " + args[2] + " is not a valid hex.\n";
+                }
+            } else if (!args[2].match(/[a-z][a-z0-9_]*/)) {
+                error += "  &bull; " + args[2] + " is not a valid label.\n";
+            }
+        }
+        
+        if (error !== "") {
+            var finalError = "Error with LDR '" + args + "'.\n" + error + "\n";
+            finalError += "Syntax:\n";
+            finalError += "  &bull; LDR [DR] [BaseR] [x6]";
+            finalError += "Examples:\n";
+            finalError += "  &bull; LDR R0 R0 #1\n";
+            
             return {
-                error: "Error on line " + itosh(addr) + " with LD '" + args + "'."
+                error: finalError
             }
         }
         
@@ -360,13 +562,9 @@ class AsmParser {
         
         var pcoffset = -1;
         
-        console.log("aflkasdfljkasdflf; " + args[1] + " " + symbols[args[1]]);
-        
         if (args[1] in symbols) {
             var b = addr;
             var a = symbols[args[2]] - 1;
-            
-            console.log("test: " + (a).toString() + " " + (b).toString() + " " + " " + (a - b).toString() + " " + ((a - b) & 0x1ff).toString());
             
             pcoffset = (a - b) & 0x2f;
         } else {
@@ -377,15 +575,48 @@ class AsmParser {
         instruction += sr << 6;
         instruction += pcoffset;
         
-        console.log("LDRRRR " + itosh(instruction));
-        
         return instruction;
     }
     
     _st(args, symbols, addr) {
-        if (args.length !== 2 || args[0][0] !== 'r' || args[0].length > 2) {
+        var error = "";
+        
+        if (args.length < 2) {
+            console.log("Not enough args");
+            error += "  &bull; Not enough arguments.\n";
+        }
+        
+        if (args.length > 2) {
+            error += "  &bull; Too many arguments.\n";
+        }
+        
+        if (args.length >= 1 && !this._isRegister(args[0])) {
+            error += "  &bull; " + args[0] + " is not a valid register.\n";
+        }
+        
+        if (args.length >= 2) {
+            if (args[1][0] === '#') {
+                if (!this._is_numeric(args[1].substr(1))) {
+                    error += "  &bull; " + args[1] + " is not a valid integer.\n";
+                }
+            } else if (args[1][0] === 'x') {
+                if (!this._is_numeric(args[1].substr(1), true)) {
+                    error += "  &bull; " + args[1] + " is not a valid hex.\n";
+                }
+            } else if (!args[1].match(/[a-z][a-z0-9_]*/)) {
+                error += "  &bull; " + args[1] + " is not a valid label.\n";
+            }
+        }
+        
+        if (error !== "") {
+            var finalError = "Error with ST '" + args + "'.\n" + error + "\n";
+            finalError += "Syntax:\n";
+            finalError += "  &bull; ST [SR] [x9]";
+            finalError += "Examples:\n";
+            finalError += "  &bull; ST R0 #1\n";
+            
             return {
-                error: "Error on line " + itosh(addr) + " with LD '" + args + "'."
+                error: finalError
             }
         }
         
@@ -395,13 +626,9 @@ class AsmParser {
         
         var pcoffset = -1;
         
-        console.log("aflkasdfljkasdflf; " + args[1] + " " + symbols[args[1]]);
-        
         if (args[1] in symbols) {
             var b = addr;
             var a = symbols[args[1]] - 1;
-            
-            console.log("test: " + (a).toString() + " " + (b).toString() + " " + " " + (a - b).toString() + " " + ((a - b) & 0x1ff).toString());
             
             pcoffset = (a - b) & 0x1ff;
         } else {
@@ -415,25 +642,56 @@ class AsmParser {
     }
     
     _sti(args, symbols, addr) {
-        if (args.length !== 2 || args[0][0] !== 'r' || args[0].length > 2) {
-            return {
-                error: "Error on line " + itosh(addr) + " with LD '" + args + "'."
+        var error = "";
+        
+        if (args.length < 2) {
+            console.log("Not enough args");
+            error += "  &bull; Not enough arguments.\n";
+        }
+        
+        if (args.length > 2) {
+            error += "  &bull; Too many arguments.\n";
+        }
+        
+        if (args.length >= 1 && !this._isRegister(args[0])) {
+            error += "  &bull; " + args[0] + " is not a valid register.\n";
+        }
+        
+        if (args.length >= 2) {
+            if (args[1][0] === '#') {
+                if (!this._is_numeric(args[1].substr(1))) {
+                    error += "  &bull; " + args[1] + " is not a valid integer.\n";
+                }
+            } else if (args[1][0] === 'x') {
+                if (!this._is_numeric(args[1].substr(1), true)) {
+                    error += "  &bull; " + args[1] + " is not a valid hex.\n";
+                }
+            } else if (!args[1].match(/[a-z][a-z0-9_]*/)) {
+                error += "  &bull; " + args[1] + " is not a valid label.\n";
             }
         }
         
+        if (error !== "") {
+            var finalError = "Error with STI '" + args + "'.\n" + error + "\n";
+            finalError += "Syntax:\n";
+            finalError += "  &bull; STI [SR] [x9]";
+            finalError += "Examples:\n";
+            finalError += "  &bull; STI R0 #1\n";
+            
+            return {
+                error: finalError
+            }
+        }
+    
         var instruction = instructionSet['sti'] << 12;
         
         var dr = parseInt(args[0][1]);
         
         var pcoffset = -1;
         
-        console.log("aflkasdfljkasdflf; " + args[1] + " " + symbols[args[1]]);
-        
         if (args[1] in symbols) {
             var b = addr;
             var a = symbols[args[1]] - 1;
-            
-            console.log("test: " + (a).toString() + " " + (b).toString() + " " + " " + (a - b).toString() + " " + ((a - b) & 0x1ff).toString());
             
             pcoffset = (a - b) & 0x1ff;
         } else {
@@ -447,9 +705,48 @@ class AsmParser {
     }
     
     _str(args, symbols, addr) {
-        if (args.length !== 3 || args[0][0] !== 'r' || args[0].length > 2 || args[1][0] !== 'r' || args[1].length > 2) {
+        var error = "";
+        
+        if (args.length < 3 ) {
+            console.log("Not enough args");
+            error += "  &bull; Not enough arguments.\n";
+        }
+        
+        if (args.length > 3 ) {
+            error += "  &bull; Too many arguments.\n";
+        }
+        
+        if (args.length >= 1 && !this._isRegister(args[0])) {
+            error += "  &bull; " + args[0] + " is not a valid register.\n";
+        }
+        
+        if (args.length >= 2 && !this._isRegister(args[1])) {
+            error += "  &bull; " + args[1] + " is not a valid register.\n";
+        }
+        
+        if (args.length >= 3) {
+            if (args[2][0] === '#') {
+                if (!this._is_numeric(args[2].substr(1))) {
+                    error += "  &bull; " + args[2] + " is not a valid integer.\n";
+                }
+            } else if (args[2][0] === 'x') {
+                if (!this._is_numeric(args[2].substr(1), true)) {
+                    error += "  &bull; " + args[2] + " is not a valid hex.\n";
+                }
+            } else if (!args[2].match(/[a-z][a-z0-9_]*/)) {
+                error += "  &bull; " + args[2] + " is not a valid label.\n";
+            }
+        }
+        
+        if (error !== "") {
+            var finalError = "Error with STR '" + args + "'.\n" + error + "\n";
+            finalError += "Syntax:\n";
+            finalError += "  &bull; STR [SR] [BaseR] [x6]";
+            finalError += "Examples:\n";
+            finalError += "  &bull; STR R0 R0 #1\n";
+            
             return {
-                error: "Error on line " + itosh(addr) + " with LD '" + args + "'."
+                error: finalError
             }
         }
         
@@ -460,13 +757,9 @@ class AsmParser {
         
         var pcoffset = -1;
         
-        console.log("aflkasdfljkasdflf; " + args[1] + " " + symbols[args[1]]);
-        
         if (args[1] in symbols) {
             var b = addr;
             var a = symbols[args[2]] - 1;
-            
-            console.log("test: " + (a).toString() + " " + (b).toString() + " " + " " + (a - b).toString() + " " + ((a - b) & 0x1ff).toString());
             
             pcoffset = (a - b) & 0x2f;
         } else {
@@ -477,15 +770,172 @@ class AsmParser {
         instruction += sr << 6;
         instruction += pcoffset;
         
-        console.log("LDRRRR " + itosh(instruction));
+        return instruction;
+    }
+    
+    _trap(args, symbols, addr) {
+        var error = "";
+        
+        if (args.length < 1 ) {
+            console.log("Not enough args");
+            error += "  &bull; Not enough arguments.\n";
+        }
+        
+        if (args.length > 1 ) {
+            error += "  &bull; Too many arguments.\n";
+        }
+        
+        if (args.length >= 1) {
+            if (args[0][0] === '#') {
+                if (!this._is_numeric(args[0].substr(1))) {
+                    error += "  &bull; " + args[0] + " is not a valid integer.\n";
+                }
+            } else if (args[0][0] === 'x') {
+                if (!this._is_numeric(args[0].substr(1), true)) {
+                    error += "  &bull; " + args[0] + " is not a valid hex.\n";
+                }
+            } else if (!args[0].match(/[a-z][a-z0-9_]*/)) {
+                error += "  &bull; " + args[0] + " is not a valid label.\n";
+            }
+        }
+        
+        if (error !== "") {
+            var finalError = "Error with TRAP '" + args + "'.\n" + error + "\n";
+            finalError += "Syntax:\n";
+            finalError += "  &bull; TRAP [x8]";
+            finalError += "Examples:\n";
+            finalError += "  &bull; TRAP x25\n";
+            
+            return {
+                error: finalError
+            }
+        }
+        
+        if (args.length !== 1) {
+            return {
+                error: "Error on line " + itosh(addr) + " with LD '" + args + "'."
+            }
+        }
+        
+        var instruction = instructionSet['trap'] << 12;
+        
+        var pcoffset = -1;
+        
+        if (args[1] in symbols) {
+            var a = symbols[args[0]];
+        
+            pcoffset = a & 0xff;
+        } else {
+            pcoffset = this._toint(args[0]) & 0xff;
+        }
+        
+        instruction += pcoffset;
         
         return instruction;
     }
     
-    _br(args, symbols, addr) {
-        if (args.length !== 2) {
+    _jmp(args, symbols, addr) {
+        console.log("JMP!")
+        var error = "";
+        
+        if (args.length < 1 ) {
+            console.log("Not enough args");
+            error += "  &bull; Not enough arguments.\n";
+        }
+        
+        if (args.length > 1 ) {
+            error += "  &bull; Too many arguments.\n";
+        }
+        
+        if (args.length >= 1 && !this._isRegister(args[0])) {
+            error += "  &bull; " + args[0] + " is not a valid register.\n";
+        }
+        
+        if (error !== "") {
+            var finalError = "Error with JMP '" + args + "'.\n" + error + "\n";
+            finalError += "Syntax:\n";
+            finalError += "  &bull; JMP [BaseR]";
+            finalError += "Examples:\n";
+            finalError += "  &bull; JMP R1";
+            
             return {
-                error: "Error on line " + itosh(addr) + " with LEA '" + args + "'."
+                error: finalError
+            }
+        }
+        
+        var instruction = instructionSet['jmp'] << 12;
+        
+        var reg = parseInt(args[0][1]);
+        
+        instruction += reg << 6;
+    
+        return instruction;
+    }
+    
+    _ret(args, symbols, addr) {
+        console.log("RET: " + args)
+        var error = "";
+
+        if (args.length > 0) {
+            error += "  &bull; Too many arguments.\n";
+        }
+        
+        if (error !== "") {
+            var finalError = "Error with RET '" + args + "'.\n" + error + "\n";
+            finalError += "Syntax:\n";
+            finalError += "  &bull; RET\n";
+            finalError += "Examples:\n";
+            finalError += "  &bull; RET";
+            
+            return {
+                error: finalError
+            }
+        }
+        
+        var instruction = instructionSet['jmp'] << 12;
+        
+        instruction += 7 << 6;
+    
+        return instruction;
+    }
+    
+    _br(args, symbols, addr) {
+        var error = "";
+        
+        if (args.length < 2 ) {
+            console.log("Not enough args");
+            error += "  &bull; Not enough arguments.\n";
+        }
+        
+        if (args.length > 2) {
+            error += "  &bull; Too many arguments.\n";
+        }
+        
+        if (args.length >= 2) {
+            if (args[1][0] === '#') {
+                if (!this._is_numeric(args[1].substr(1))) {
+                    error += "  &bull; " + args[1] + " is not a valid integer.\n";
+                }
+            } else if (args[1][0] === 'x') {
+                if (!this._is_numeric(args[1].substr(1), true)) {
+                    error += "  &bull; " + args[1] + " is not a valid hex.\n";
+                }
+            } else if (!args[1].match(/[a-z][a-z0-9_]*/)) {
+                error += "  &bull; " + args[1] + " is not a valid label.\n";
+            }
+        }
+        
+        if (error !== "") {
+            var finalError = "Error with BR '" + args + "'.\n" + error + "\n";
+            finalError += "Syntax:\n";
+            finalError += "  &bull; BR[n][z][p] [x9]\n";
+            finalError += "Examples:\n";
+            finalError += "  &bull; BR #-1\n";
+            finalError += "  &bull; BRzp x10\n";
+            finalError += "  &bull; BRp START";
+            
+            return {
+                error: finalError
             }
         }
         
@@ -515,10 +965,53 @@ class AsmParser {
         return instruction;
     }
     
+    _is_numeric(str, hex = false){
+        return hex ? /^([0-9a-fA-F])+$/.test(str) : /^([0-9])+$/.test(str)
+    }
+    
     _and(args, symbols, addr) {
-        if (args.length !== 3 || args[0][0] !== 'r' || args[1][0] !== 'r' || args[0].length > 2 || args[1].length > 2) {
+        var error = "";
+        
+        if (args.length < 3 ) {
+            console.log("Not enough args");
+            error += "  &bull; Not enough arguments.\n";
+        }
+        
+        if (args.length > 3 ) {
+            error += "  &bull; Too many arguments.\n";
+        }
+        
+        if (args.length >= 1 && !this._isRegister(args[0])) {
+            error += "  &bull; " + args[0] + " is not a valid register.\n";
+        }
+        
+        if (args.length >= 2 && !this._isRegister(args[1])) {
+            error += "  &bull; " + args[1] + " is not a valid register.\n";
+        }
+        
+        if (args.length >= 3 && !this._isRegister(args[2])) {
+            if (args[2][0] === '#') {
+                if (!this._is_numeric(args[2].substr(1))) {
+                    error += "  &bull; " + args[2] + " is not a valid integer.\n";
+                }
+            } else if (args[2][0] === 'x') {
+                if (!this._is_numeric(args[2].substr(1), true)) {
+                    error += "  &bull; " + args[2] + " is not a valid hex.\n";
+                }
+            } else if (!args[2].match(/[a-z][a-z0-9_]*/)) {
+                error += "  &bull; " + args[2] + " is not a valid label.\n";
+            }
+        }
+        
+        if (error !== "") {
+            var finalError = "Error with AND '" + args + "'.\n" + error + "\n";
+            finalError += "Syntax:\n";
+            finalError += "  &bull; AND [DR] [SR1] [SR2|x5]\n";
+            finalError += "Examples:\n";
+            finalError += "  &bull; AND R0 R0 R1";
+            
             return {
-                error: "Error on line " + itosh(addr) + " with AND '" + args + "'."
+                error: finalError
             }
         }
         
@@ -537,13 +1030,13 @@ class AsmParser {
         } else if (!isNaN(this._toint(toadd))) {
             instruction += 0x20;
             instruction += (this._toint(toadd) & 0x1f);
-        } else {
-            return {
-                error: "Error on line " + itosh(addr) + " with ADD '" + args + "'. Last arg invalid."
-            }
         }
         
         return instruction;
+    }
+    
+    _isRegister(token) {
+        return token[0] === 'r' && token.length === 2 && this._is_numeric(token[1]) && parseInt(token[1]) >= 0 && parseInt(token[1]) <= 7
     }
     
     _getSymbols(program) {
@@ -556,7 +1049,7 @@ class AsmParser {
             var token = instruction[0];
             
             if (instructionSet[token] === undefined && !asmSet[token] && token[0] != '.') {
-                console.log("symbolz: " + token)
+
                 // symbol!!!
                 if (token.match(/[a-z][a-z0-9_]*/)) {
                     if (token in symbols) {
@@ -654,8 +1147,6 @@ class AsmParser {
     _toint(n, bit = -1, mask = -1) {
         var num = NaN;
         
-        console.log("Passed in: " + n);
-        
         if (n.length >= 2) {
             if (n[0] == "x") {
                 n = n.slice(1);
@@ -684,12 +1175,9 @@ class AsmParser {
             t = t >> (bit - 1);
             
             if (!isNaN(num) && bit > 0 && t === 1) {
-                console.log(num.toString(2));
                 num ^= 0xffff;
                 num += 1;
                 num = num * -1;
-                console.log(num);
-                console.log(num.toString(2));
             }
         }
         

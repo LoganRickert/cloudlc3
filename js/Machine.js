@@ -96,9 +96,6 @@ class Machine {
         var a = new AsmParser();
         var fb = a.parse(program);
         
-        console.log("Loading!!");
-        console.log(fb);
-        
         if (!fb.errors) {
             for (var inst in fb.instructions) {
                 var instruction = fb.instructions[inst]
@@ -120,6 +117,14 @@ class Machine {
         } else {
             console.log(fb.errors);
         }
+    }
+    
+    getMemory() {
+        return this.memory;
+    }
+    
+    getCPU() {
+        return this.cpu;
     }
     
 }

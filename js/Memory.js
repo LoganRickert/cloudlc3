@@ -182,7 +182,23 @@ class Memory {
             // KBSR
             0xFE00: 0x0,
             // KBDR
-            0xFE02: 0x0
+            0xFE02: 0x0,
+            
+            // GUI Status -- Ready for next
+            0xFE10: 0x8000,
+            // GUI Data -- What to write.
+            // 16-12: Height
+            // 11-8: Width
+            // 7-4: Y
+            // 3-0: X
+            0xFE11: 0x0,
+            // GUI Color -- What color to write
+            // xff = R, x00ff = G
+            0xFE12: 0xDDDD,
+            // xff = B, x00ff = A / 256
+            0xFE13: 0xDDFF,
+            // Clear screen -- Write #1
+            0xFE14: 0x0
         };
         
         for (var i in this.memory) {
@@ -209,10 +225,10 @@ class Memory {
         }
     }
     
-    getMemoryCell(i) {
+    getMemoryCell(i, ignore = true) {
         var m = this.memory[i] !== undefined ? this.memory[i] : new MemoryCell();
         
-        if (i == 0xFE02) {
+        if (i == 0xFE02 && !ignore) {
             this.updateMemoryCell(0xfe00, 0);
         }
         
@@ -226,7 +242,24 @@ class Memory {
     updateMemoryCell(i, x) {
         if (i === 0xFE06) {
             outputKey(x);
-        } else {
+        } else if (i == 0xFE14) {
+            gui.clear();
+        } else if (i == 0xFE11) {
+            var h = (x & 0xf000) >> 3;
+            var w = (x & 0xf00) >> 2;
+            var y = (x & 0xf0) >> 1;
+            var x = (x & 0xf);
+            
+            var c1 = this.getMemoryCell(0xFE12, true);
+            var c2 = this.getMemoryCell(0xFE13, true);
+            var r = (c1 & 0xff00) >> 2;
+            var g = (c1 & 0xff);
+            var b = (c2 & 0xff00) >> 2;
+            var a = (c2 & 0xff);
+            
+            draw(x, y, w, h, r, g, b, a);
+        }
+        else {
             var g = this.getMemoryCell(i);
             g.setHex(x);
             this.memory[i] = g;
