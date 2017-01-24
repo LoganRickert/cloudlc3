@@ -1,33 +1,6 @@
-
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <title>LC3 Simulator</title>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="description" content="">
-        <link href="https://fonts.googleapis.com/css?family=Roboto+Mono" rel="stylesheet">
-        <link href="https://fonts.googleapis.com/css?family=Roboto:400,700" rel="stylesheet">
-        <link rel="shortcut icon" href="images/favicon.ico">
-        <link rel="stylesheet" href="css/normalize.css">
-        <link rel="stylesheet" href="css/main.css">
-        <script src="js/jquery-1.12.4.min.js"></script>
-    </head>
-    <body>
-        <header>
-            <div class="wrapper">
-                <h1><a href="index.html">Cloud LC3</a></h1>
-                <nav>
-                    <ul>
-                        <li><a href="#">Home</a></li>
-                        <li><a href="#">Resources</a></li>
-                        <li><a href="#">Examples</a></li>
-                        <li><a href="#">My Programs</a></li>
-                    </ul>
-                </nav>
-            </div>
-        </header>
-        <main>
+<?PHP
+    echo file_get_contents('src/header.html');
+?>
             <div class="wrapper">
                 <h1>Program #1</h1>
                 <div class="w50 left">
@@ -141,16 +114,14 @@
                     </section>
                 </div>
             </div>
-        </main>
-        <footer>
-            &copy; 2017
-        </footer>
-        <script src="js/GUI.js"></script>
-        <script src="js/Decoder.js"></script>
-        <script src="js/AsmParser.js"></script>
-        <script src="js/Memory.js"></script>
-        <script src="js/CPU.js"></script>
-        <script src="js/Machine.js"></script>
-        <script src="js/main.js"></script>
-    </body>
-</html>
+            <?PHP
+                // Yes, this is bad practice. It's just super temp.
+                $program = htmlspecialchars($_GET['program']);
+                
+                if (!$program) $program = "default";
+                
+                echo "<script src='programs/$program.js'></script>";
+            ?>
+<?PHP
+    echo file_get_contents('src/mfooter.html');
+?>

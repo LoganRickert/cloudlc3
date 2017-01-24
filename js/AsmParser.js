@@ -966,7 +966,7 @@ class AsmParser {
     }
     
     _is_numeric(str, hex = false){
-        return hex ? /^([0-9a-fA-F])+$/.test(str) : /^([0-9])+$/.test(str)
+        return hex ? /^([0-9a-fA-F])+$/.test(str) : /^([0-9\\-])+$/.test(str)
     }
     
     _and(args, symbols, addr) {

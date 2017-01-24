@@ -2,6 +2,7 @@
 html {
     background: #fff;
     font-family: 'Roboto', sans-serif;
+    overflow-y: scroll;
 }
 
 h1, h2, h3, h4, p {
@@ -9,7 +10,7 @@ h1, h2, h3, h4, p {
 }
 
 main h1 {
-    padding: 20px;
+    padding: 40px 20px 20px;
     font-size: 36px;
 }
 
@@ -94,6 +95,32 @@ main .short {
 
 main h2 {
     padding: 0 0 15px 0;
+}
+
+main .infolist li {
+    padding: 20px;
+    background: #eee;
+    list-style: none;
+    transition: background 0.25s ease;
+    font-size: 20px;
+    border-bottom: 1px solid #ccc;
+}
+
+main .infolist li:last {
+    border: none;
+}
+
+main .infolist li:hover {
+    background: #ddd;
+}
+
+main .infolist li a {
+    color: #333;
+    text-decoration: none;
+}
+
+main .infolist li:hover a {
+    font-weight: bold;
 }
 
 .unit {
