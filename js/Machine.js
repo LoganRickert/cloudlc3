@@ -92,7 +92,7 @@ class Machine {
         this.memory.keyPressed(k);
     }
     
-    loadAsm(program) {
+    loadAsm(program, changePC = true) {
         var a = new AsmParser();
         var fb = a.parse(program);
         
@@ -108,10 +108,12 @@ class Machine {
             
             console.log(this.memory);
             
-            this.cpu.setPC(fb.orig);
+            if (changePC) {
+                this.cpu.setPC(fb.orig);
             
-            var instruction = this.getMemoryCell(this.cpu.getPC()).getHex();
-            this.cpu.setIR(instruction);
+                var instruction = this.getMemoryCell(this.cpu.getPC()).getHex();
+                this.cpu.setIR(instruction);
+            }
             
             refreshView();
         } else {

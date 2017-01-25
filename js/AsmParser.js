@@ -566,9 +566,9 @@ class AsmParser {
             var b = addr;
             var a = symbols[args[2]] - 1;
             
-            pcoffset = (a - b) & 0x2f;
+            pcoffset = (a - b) & 0x3f;
         } else {
-            pcoffset = this._toint(args[2]) & 0x2f;
+            pcoffset = this._toint(args[2], 6) & 0x3f;
         }
         
         instruction += dr << 9;
@@ -761,9 +761,9 @@ class AsmParser {
             var b = addr;
             var a = symbols[args[2]] - 1;
             
-            pcoffset = (a - b) & 0x2f;
+            pcoffset = (a - b) & 0x3f;
         } else {
-            pcoffset = this._toint(args[2]) & 0x2f;
+            pcoffset = this._toint(args[2]) & 0x3f;
         }
         
         instruction += dr << 9;

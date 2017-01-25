@@ -211,7 +211,7 @@ class CPU {
         if (this.cc & 0b100 && n === 1 ||
             this.cc & 0b010 && z === 1 ||
             this.cc & 0b001 && p === 1) {
-            this.pc.changeValue(offset-1);
+            this.pc.changeValue(offset);
         }
     }
     

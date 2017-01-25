@@ -213,10 +213,10 @@ function loadMemory() {
         
         var mcell = machine.getMemoryCell(i);
         
-        var ihex = itosh(mcell.getHex())
-        var ilabel = itosh(mcell.getHex())
-        var iinstruction = decoder.decode(mcell.getHex(), i, machine.getMemory(), machine.getCPU())
-        var iascii = String.fromCharCode((mcell.getHex() & 0xff00) >> 8) + String.fromCharCode(mcell.getHex() & 0xff)
+        var ihex = itosh(mcell.getHex());
+        var ilabel = mcell.getLabel();
+        var iinstruction = decoder.decode(mcell.getHex(), i, machine.getMemory(), machine.getCPU());
+        var iascii = String.fromCharCode((mcell.getHex() & 0xff00) >> 8) + String.fromCharCode(mcell.getHex() & 0xff);
         
         newInner += "<td><button id='memory-unit-breakpoint'>B</button></td>\
             <td>" + itosh(i) + "</td>\
@@ -296,7 +296,7 @@ function changeMemory(el, memAddr, type) {
         machine.getMemory().updateMemoryCell(memAddr, _toint(newValue));
     } else if (type == 1) {
         console.log(".orig " + itosh(memAddr) + "\n" + newValue);
-        machine.loadAsm(".orig " + itosh(memAddr) + "\n" + newValue);
+        machine.loadAsm(".orig " + itosh(memAddr) + "\n" + newValue, false);
     } else if (type == 2) {
         var nv = 0;
         

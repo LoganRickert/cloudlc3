@@ -182,7 +182,7 @@ class Decoder {
         var asm = "";
         var dr = (arg & 0b111000000000) >> 9;
         var sr = (arg & 0b111000000) >> 6;
-        var offset = this.getSigned(arg & 0x2f, 6, 0x7f);
+        var offset = this.getSigned(arg & 0x3f, 6, 0x1f);
         
         var add = cpu.getRegister(sr).getValue() + offset;
         var m = memory.getMemoryCell(add).getHex();
@@ -236,7 +236,7 @@ class Decoder {
         var asm = "";
         var dr = (arg & 0b111000000000) >> 9;
         var sr = (arg & 0b111000000) >> 6;
-        var offset = this.getSigned(arg & 0x2f, 6, 0x7f);
+        var offset = this.getSigned(arg & 0x3f, 6, 0x1f);
         
         if (predict) {
             asm += "m[R" + sr + " + " + itosh(offset) + "] = " + itosh(cpu.getRegister(dr).getValue());
@@ -279,7 +279,7 @@ class Decoder {
             if (z) asm += "z";
             if (p) asm += "p";
             
-            asm += " " + itosh(pcoffset + addr);
+            asm += " " + itosh(pcoffset + addr + 1);
         } else {
             asm = "BR";
             
@@ -287,7 +287,7 @@ class Decoder {
             if (z) asm += "z";
             if (p) asm += "p";
             
-            asm += " " + itosh(pcoffset + addr);
+            asm += " " + itosh(pcoffset + addr + 1);
         }
         
         return asm;
