@@ -290,6 +290,21 @@ class CPU {
         this.setPC(this.registers[reg].getValue());
     }
     
+    jsp(arg, memory) {
+        var bitSwitched = (arg & 0xFFF) >> 11;
+        
+        this.registers[7].setValue(this.getPC().getHex());
+        var newPC = -1;
+        
+        if (bitSwitched === 1) {
+            newPC = this.bextend(arg & 0xfff, 10);
+        } else {
+            newPC = this.registers[arg & 0x1C0 >> 6].getValue();
+        }
+        
+        this.setPC(newPC);
+    }
+    
     newCC(v) {
         var sign = ((v & 0xffff) >> 0xf) === 1 ? -1 : 1;
         

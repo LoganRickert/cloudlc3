@@ -960,7 +960,64 @@ class AsmParser {
             pcoffset = this._toint(args[1]) & 0x1ff;
         }
         
-        instruction += pcoffset;
+        instruction += pcoffset-1;
+        
+        return instruction;
+    }
+    
+    _jsp(args, symbols, addr) {
+        var error = "";
+        
+        if (args.length < 2 ) {
+            console.log("Not enough args");
+            error += "  &bull; Not enough arguments.\n";
+        }
+        
+        if (args.length > 2) {
+            error += "  &bull; Too many arguments.\n";
+        }
+        
+        if (args.length >= 2) {
+            if (args[1][0] === '#') {
+                if (!this._is_numeric(args[1].substr(1))) {
+                    error += "  &bull; " + args[1] + " is not a valid integer.\n";
+                }
+            } else if (args[1][0] === 'x') {
+                if (!this._is_numeric(args[1].substr(1), true)) {
+                    error += "  &bull; " + args[1] + " is not a valid hex.\n";
+                }
+            } else if (!args[1].match(/[a-z][a-z0-9_]*/)) {
+                error += "  &bull; " + args[1] + " is not a valid label.\n";
+            }
+        }
+        
+        if (error !== "") {
+            var finalError = "Error with BR '" + args + "'.\n" + error + "\n";
+            finalError += "Syntax:\n";
+            finalError += "  &bull; BR[n][z][p] [x9]\n";
+            finalError += "Examples:\n";
+            finalError += "  &bull; BR #-1\n";
+            finalError += "  &bull; BRzp x10\n";
+            finalError += "  &bull; BRp START";
+            
+            return {
+                error: finalError
+            }
+        }
+        
+        var instruction = 0;
+        var pcoffset = -1
+        
+        if (args[1] in symbols) {
+            var b = addr;
+            var a = symbols[args[1]];
+    
+            pcoffset = (a - b) & 0x1ff;
+        } else {
+            pcoffset = this._toint(args[1]) & 0x1ff;
+        }
+        
+        instruction += pcoffset-1;
         
         return instruction;
     }
