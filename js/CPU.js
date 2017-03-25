@@ -128,6 +128,9 @@ class CPU {
                 if (arg !== 0x0fff)
                     this.trap(arg, memory);
                 break;
+            case instructionSet["jsr"]:
+                this.jsr(arg);
+                break;
             case instructionSet["ret"]:
             case instructionSet["jmp"]:
                 this.jmp(arg, memory);
@@ -197,7 +200,7 @@ class CPU {
         var dr = (arg & 0b111000000000) >> 9;
         var offset = this.bextend(arg & 0x1ff, 9);
         
-        this.registers[dr].setValue(this.getPC() + offset);
+        this.registers[dr].setValue(this.getPC() + offset - 1);
         
         this.newCC(this.registers[dr].getValue());
     }
@@ -290,17 +293,27 @@ class CPU {
         this.setPC(this.registers[reg].getValue());
     }
     
-    jsp(arg, memory) {
-        var bitSwitched = (arg & 0xFFF) >> 11;
+    jsr(arg, memory) {
+        var bitSwitched = (arg & 0x800) >> 11;
         
-        this.registers[7].setValue(this.getPC().getHex());
+        console.log("----");
+        console.log(arg)
+        console.log(arg & 0x800);
+        console.log(bitSwitched);
+        
+        this.registers[7].setValue(this.getPC());
         var newPC = -1;
         
         if (bitSwitched === 1) {
-            newPC = this.bextend(arg & 0xfff, 10);
+            console.log(arg & 0x7FF);
+            console.log(this.bextend(arg & 0x7FF, 10));
+            newPC = this.getPC() + this.bextend(arg & 0x7FF, 10);
         } else {
+            console.log("Took wrong one.");
             newPC = this.registers[arg & 0x1C0 >> 6].getValue();
         }
+        
+        console.log("----");
         
         this.setPC(newPC);
     }

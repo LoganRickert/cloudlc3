@@ -105,9 +105,11 @@ function actualErrorCheck(el) {
                     asmE += "<span class='tooltip'>" + asmSpacer + "E<div class='tooltiptext'>" + instruction.hex.error + "</div></span>";
                 }
             }
-        } // else {
-        //     asmE += asmSpacer + "W";
-        // }
+        } else {
+            asmE += "<span class='tooltip'>" + asmSpacer + "E<div class='tooltiptext'>" + fb.errors + "</div></span>";
+        }
+        
+        console.log(fb);
         
         asmE += "\n";
     }
@@ -280,7 +282,8 @@ function getPrintableAscii(c) {
     var newc = "";
     
     if (c.length > 0) {
-        newc += c.charCodeAt(0) < 32 ? "&diams;" : c[0];
+        if (c.charCodeAt(0) === 0) newc += " ";
+        else newc += c.charCodeAt(0) < 32 ? "&diams;" : c[0];
     }
     if (c.length > 1) {
         newc += c.charCodeAt(1) < 32 ? "&diams;" : c[1];

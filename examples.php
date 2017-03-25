@@ -3,6 +3,7 @@
     $examples = array(
         array("name" => "Text Prompt", "file" => "default"),
         array("name" => "Draw A Line", "file" => "basicgui"),
+        array("name" => "Guessing Game", "file" => "guessgame"),
     );
     
     echo file_get_contents('src/header.html');

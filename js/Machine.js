@@ -11,7 +11,7 @@ var instructionSet = {
     "brnp": 0x0,
     "brnzp": 0x0,
     "jmp": 0xc,
-    "jsp": 0x4,
+    "jsr": 0x4,
     "jsrr": 0x4,
     "ld": 0x2,
     "ldi": 0xa,

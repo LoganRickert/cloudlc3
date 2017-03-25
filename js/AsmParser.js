@@ -27,12 +27,14 @@ class AsmParser {
             return {
                 errors: ["Orig is not a number!"]
             };
-        } else {
         }
         
         var instructions = {};
         
         var symbols = this._getSymbols(program);
+        
+        if (symbols.errors) return symbols;
+        
         var rSymbols = this._reverse(symbols);
         
         var addr = orig;
@@ -134,6 +136,18 @@ class AsmParser {
                             label: rSymbols[addr]
                         }
                         break;
+                    case "jsr":
+                        instructions[addr] = {
+                            hex: this._jsr(instruction.slice(s), symbols, addr),
+                            label: rSymbols[addr]
+                        }
+                        break;
+                    case "jsrr":
+                        instructions[addr] = {
+                            hex: this._jsrr(instruction.slice(s), symbols, addr),
+                            label: rSymbols[addr]
+                        }
+                        break;
                     case "br":
                     case "brz":
                     case "brn":
@@ -197,6 +211,7 @@ class AsmParser {
                         hex: 0,
                         label: rSymbols[addr]
                     }
+                    
                     addr++;
                 }
             }
@@ -298,7 +313,7 @@ class AsmParser {
         if (error !== "") {
             var finalError = "Error with AND '" + args + "'.\n" + error + "\n";
             finalError += "Syntax:\n";
-            finalError += "  &bull; NOT [DR] [SR]";
+            finalError += "  &bull; NOT [DR] [SR]\n";
             finalError += "Examples:\n";
             finalError += "  &bull; NOT R0 R0\n";
             
@@ -353,7 +368,7 @@ class AsmParser {
         if (error !== "") {
             var finalError = "Error with LEA '" + args + "'.\n" + error + "\n";
             finalError += "Syntax:\n";
-            finalError += "  &bull; LEA [DR] [x9]";
+            finalError += "  &bull; LEA [DR] [x9]\n";
             finalError += "Examples:\n";
             finalError += "  &bull; LEA R0 #1\n";
             
@@ -416,7 +431,7 @@ class AsmParser {
         if (error !== "") {
             var finalError = "Error with LD '" + args + "'.\n" + error + "\n";
             finalError += "Syntax:\n";
-            finalError += "  &bull; LD [DR] [x9]";
+            finalError += "  &bull; LD [DR] [x9]\n";
             finalError += "Examples:\n";
             finalError += "  &bull; LD R0 #1\n";
             
@@ -479,7 +494,7 @@ class AsmParser {
         if (error !== "") {
             var finalError = "Error with LDI '" + args + "'.\n" + error + "\n";
             finalError += "Examples:\n";
-            finalError += "  &bull; LDI [DR] [x9]";
+            finalError += "  &bull; LDI [DR] [x9]\n";
             finalError += "Examples:\n";
             finalError += "  &bull; LDI R0 #1\n";
             
@@ -546,7 +561,7 @@ class AsmParser {
         if (error !== "") {
             var finalError = "Error with LDR '" + args + "'.\n" + error + "\n";
             finalError += "Syntax:\n";
-            finalError += "  &bull; LDR [DR] [BaseR] [x6]";
+            finalError += "  &bull; LDR [DR] [BaseR] [x6]\n";
             finalError += "Examples:\n";
             finalError += "  &bull; LDR R0 R0 #1\n";
             
@@ -611,7 +626,7 @@ class AsmParser {
         if (error !== "") {
             var finalError = "Error with ST '" + args + "'.\n" + error + "\n";
             finalError += "Syntax:\n";
-            finalError += "  &bull; ST [SR] [x9]";
+            finalError += "  &bull; ST [SR] [x9]\n";
             finalError += "Examples:\n";
             finalError += "  &bull; ST R0 #1\n";
             
@@ -674,7 +689,7 @@ class AsmParser {
         if (error !== "") {
             var finalError = "Error with STI '" + args + "'.\n" + error + "\n";
             finalError += "Syntax:\n";
-            finalError += "  &bull; STI [SR] [x9]";
+            finalError += "  &bull; STI [SR] [x9]\n";
             finalError += "Examples:\n";
             finalError += "  &bull; STI R0 #1\n";
             
@@ -741,7 +756,7 @@ class AsmParser {
         if (error !== "") {
             var finalError = "Error with STR '" + args + "'.\n" + error + "\n";
             finalError += "Syntax:\n";
-            finalError += "  &bull; STR [SR] [BaseR] [x6]";
+            finalError += "  &bull; STR [SR] [BaseR] [x6]\n";
             finalError += "Examples:\n";
             finalError += "  &bull; STR R0 R0 #1\n";
             
@@ -802,7 +817,7 @@ class AsmParser {
         if (error !== "") {
             var finalError = "Error with TRAP '" + args + "'.\n" + error + "\n";
             finalError += "Syntax:\n";
-            finalError += "  &bull; TRAP [x8]";
+            finalError += "  &bull; TRAP [x8]\n";
             finalError += "Examples:\n";
             finalError += "  &bull; TRAP x25\n";
             
@@ -854,7 +869,7 @@ class AsmParser {
         if (error !== "") {
             var finalError = "Error with JMP '" + args + "'.\n" + error + "\n";
             finalError += "Syntax:\n";
-            finalError += "  &bull; JMP [BaseR]";
+            finalError += "  &bull; JMP [BaseR]\n";
             finalError += "Examples:\n";
             finalError += "  &bull; JMP R1";
             
@@ -965,10 +980,47 @@ class AsmParser {
         return instruction;
     }
     
-    _jsp(args, symbols, addr) {
+    _jsrr(args, symbols, addr) {
         var error = "";
         
-        if (args.length < 2 ) {
+        if (args.length < 1 ) {
+            console.log("Not enough args");
+            error += "  &bull; Not enough arguments.\n";
+        }
+        
+        if (args.length > 1 ) {
+            error += "  &bull; Too many arguments.\n";
+        }
+        
+        if (args.length >= 1 && !this._isRegister(args[0])) {
+            error += "  &bull; " + args[0] + " is not a valid register.\n";
+        }
+        
+        if (error !== "") {
+            var finalError = "Error with JSRR '" + args + "'.\n" + error + "\n";
+            finalError += "Syntax:\n";
+            finalError += "  &bull; JSRR [BaseR]\n";
+            finalError += "Examples:\n";
+            finalError += "  &bull; JSRR R1";
+            
+            return {
+                error: finalError
+            }
+        }
+        
+        var instruction = instructionSet['jsrr'] << 12;
+        
+        var reg = parseInt(args[0][1]);
+        
+        instruction += reg << 6;
+    
+        return instruction;
+    }
+    
+    _jsr(args, symbols, addr) {
+        var error = "";
+        
+        if (args.length < 1 ) {
             console.log("Not enough args");
             error += "  &bull; Not enough arguments.\n";
         }
@@ -977,47 +1029,46 @@ class AsmParser {
             error += "  &bull; Too many arguments.\n";
         }
         
-        if (args.length >= 2) {
-            if (args[1][0] === '#') {
-                if (!this._is_numeric(args[1].substr(1))) {
-                    error += "  &bull; " + args[1] + " is not a valid integer.\n";
+        if (args.length >= 1) {
+            if (args[0][0] === '#') {
+                if (!this._is_numeric(args[0].substr(1))) {
+                    error += "  &bull; " + args[0] + " is not a valid integer.\n";
                 }
-            } else if (args[1][0] === 'x') {
-                if (!this._is_numeric(args[1].substr(1), true)) {
-                    error += "  &bull; " + args[1] + " is not a valid hex.\n";
+            } else if (args[0][0] === 'x') {
+                if (!this._is_numeric(args[0].substr(1), true)) {
+                    error += "  &bull; " + args[0] + " is not a valid hex.\n";
                 }
-            } else if (!args[1].match(/[a-z][a-z0-9_]*/)) {
+            }  else if (!args[0].match(/[a-z][a-z0-9_]*/)) {
                 error += "  &bull; " + args[1] + " is not a valid label.\n";
             }
         }
         
         if (error !== "") {
-            var finalError = "Error with BR '" + args + "'.\n" + error + "\n";
+            var finalError = "Error with JSP '" + args + "'.\n" + error + "\n";
             finalError += "Syntax:\n";
-            finalError += "  &bull; BR[n][z][p] [x9]\n";
+            finalError += "  &bull; JSP [x11]\n";
             finalError += "Examples:\n";
-            finalError += "  &bull; BR #-1\n";
-            finalError += "  &bull; BRzp x10\n";
-            finalError += "  &bull; BRp START";
+            finalError += "  &bull; JSP #10\n";
             
             return {
                 error: finalError
             }
         }
         
-        var instruction = 0;
-        var pcoffset = -1
+        var instruction = instructionSet["jsr"] << 12;
+        instruction += 1 << 11;
+        var pcoffset;
         
-        if (args[1] in symbols) {
+        if (args[0] in symbols) {
             var b = addr;
-            var a = symbols[args[1]];
+            var a = symbols[args[0]];
     
-            pcoffset = (a - b) & 0x1ff;
+            pcoffset = (a - b - 1) & 0x7FF;
         } else {
-            pcoffset = this._toint(args[1]) & 0x1ff;
+            pcoffset = this._toint(args[0]) & 0x7FF;
         }
-        
-        instruction += pcoffset-1;
+
+        instruction += pcoffset;
         
         return instruction;
     }
@@ -1105,9 +1156,10 @@ class AsmParser {
             
             var token = instruction[0];
             
-            if (instructionSet[token] === undefined && !asmSet[token] && token[0] != '.') {
+            if (instructionSet[token] === undefined && !asmSet[token] && token[0] !== '.') {
 
                 // symbol!!!
+                console.log("Got symbol " + instruction);
                 if (token.match(/[a-z][a-z0-9_]*/)) {
                     if (token in symbols) {
                         return {
@@ -1115,17 +1167,27 @@ class AsmParser {
                         };
                     }
                     
+                    console.log("Here! " + itosh(addr));
+                    
                     if (instruction.length === 1) {
                         symbols[token] = addr;
                     } else if (instruction[1][0] !== '.') {
                         symbols[token] = addr;
-                        addr++
+                        if (instructionSet[instruction[1]] === undefined && asmSet[instruction[1]] === undefined) {
+                            return {
+                                errors: ["Instruction not found. " + instruction]
+                            };
+                        } else {
+                            addr++;
+                        }
                     } else if (instruction[1][0] === '.'){
+                        // console.log("Starts with a dot. " + instruction);
                         symbols[token] = addr;
                         
                         if (instruction.length >= 3 && instruction[1] === ".fill") {
                             addr++;
                         } else if (instruction.length >= 3 && instruction[1] === ".blkw") {
+                            // console.log("Skipping: " + this._toint(instruction[2]));
                             addr += this._toint(instruction[2]);
                         } else if (instruction.length >= 3 && instruction[1] === ".stringz") {
                             var str = instruction.slice(2).join(" ");
@@ -1142,10 +1204,34 @@ class AsmParser {
                         errors: ["Symbol '" + token + "' is invalid at line " + i]
                     };
                 }
+            } else if (token[0] === '.') {
+                console.log("Starts with a dotasdf. " + instruction);
+                
+                if (token === ".orig" || token === ".end") {
+                    addr++;
+                } else if (instruction.length >= 2 && token == ".fill") {
+                    addr++;
+                } else if (instruction.length >= 2 && token === ".blkw") {
+                    console.log("Skipping: " + this._toint(instruction[1]));
+                    addr += this._toint(instruction[1]);
+                } else if (instruction.length >= 2 && token === ".stringz") {
+                    var str = instruction.slice(2).join(" ");
+                    str = str.substr(1, str.length - 2);
+                    addr += str.length+1;
+                } else {
+                    console.log("Invalid!!!!!!");
+                    return {
+                        errors: ["Invalid asm instruction on line " + i + ". Make sure you didn't misspell it. " + instruction]
+                    };
+                }
             } else {
+                console.log("instruction");
                 addr++;
             }
         }
+        
+        console.log("end symbols:");
+        console.log(symbols);
         
         return symbols;
     }

@@ -1,6 +1,6 @@
 
 class MemoryCell {
-    constructor(label = "", hex = 0xffff) {
+    constructor(label = "", hex = 0) {
         this.label = label;
         this.hex = hex;
     }
@@ -237,6 +237,8 @@ class Memory {
         
         if (i == 0xFE02 && !ignore) {
             this.updateMemoryCell(0xfe00, 0);
+        } else if (i == 0xFE20 && !ignore) {
+            return new MemoryCell("", (Math.random() * 0xffff) & 0xffff);
         }
         
         return m;

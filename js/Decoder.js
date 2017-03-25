@@ -14,9 +14,7 @@ class Decoder {
     decode(instruction, addr, memory, cpu) {
         var asm = "NOP";
         
-        if (instruction == 0xffff) {
-            return asm;
-        } else if (reverseAsmSet[instruction]) {
+        if (reverseAsmSet[instruction]) {
             return reverseAsmSet[instruction].toUpperCase();
         } else {
             var ins = (instruction & 0xf000) >> 12;
@@ -55,6 +53,9 @@ class Decoder {
                     break;
                 case 0:
                     asm = this.br(arg, addr, memory, cpu);
+                    break;
+                case 4:
+                    asm = this.jsr(arg, addr, memory, cpu);
                     break;
                 default:
                     break;
@@ -256,6 +257,8 @@ class Decoder {
         
         var pcoffset = this.getSigned(arg & 0x1ff, 9, 0xff);
         
+        if (pcoffset === 0) return "NOP";
+        
         var cc = cpu.getCC();
         var isn = (cc & 0b100) >> 2;
         var isz = (cc & 0b10) >> 1;
@@ -331,6 +334,10 @@ class Decoder {
         }
         
         return asm;
+    }
+    
+    jsr(arg, addr, memory, cpu) {
+        return "JSR";
     }
     
     getSigned(num, l, mask) {
