@@ -4,6 +4,7 @@
         array("name" => "Text Prompt", "file" => "default"),
         array("name" => "Draw A Line", "file" => "basicgui"),
         array("name" => "Guessing Game", "file" => "guessgame"),
+        array("name" => "Sum Inputs", "file" => "summer"),
     );
     
     echo file_get_contents('src/header.html');

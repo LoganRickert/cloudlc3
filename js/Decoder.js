@@ -130,7 +130,7 @@ class Decoder {
     lea(arg, addr) {
         var asm = "";
         var dr = (arg & 0b111000000000) >> 9;
-        var pcoffset = this.getSigned(arg & 0x1ff, 9, 0xff);
+        var pcoffset = this.getSigned(arg & 0x1ff, 9, 0xff) + 1;
         
         if (predict) {
             asm += "R" + dr + " = " + itosh(addr + pcoffset);

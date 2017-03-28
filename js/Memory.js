@@ -170,7 +170,9 @@ class Memory {
             0xFD79: 0x2003,
             0xFD7A: 0x2203,
             0xFD7B: 0x2E03,
-            0xFD7C: 0xC1C0,
+            0xFD7C: 0x0DFF, // I changed 0xC1C0 to 0x0DFF
+                            // This way HALT stops the processor.
+                            // MCR 'xFFFE' isn't implemented yet lol.
             /* the "halting the processor" message goes here */
             0xFDA5: 0xFFFE,
             0xFDA6: 0x7FFF,

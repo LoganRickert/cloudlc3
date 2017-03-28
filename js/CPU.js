@@ -200,7 +200,7 @@ class CPU {
         var dr = (arg & 0b111000000000) >> 9;
         var offset = this.bextend(arg & 0x1ff, 9);
         
-        this.registers[dr].setValue(this.getPC() + offset - 1);
+        this.registers[dr].setValue(this.getPC() + offset);
         
         this.newCC(this.registers[dr].getValue());
     }
@@ -241,11 +241,11 @@ class CPU {
     ldr(arg, memory) {
         var dr = (arg & 0b111000000000) >> 9;
         var sr = (arg & 0b111000000) >> 6;
-        var offset = this.bextend(arg & 0x2f, 6);
+        var offset = this.bextend(arg & 0x3f, 6);
         
         var rv = this.registers[sr].getValue();
         
-        var mem = memory.getMemoryCell(rv + offset, false).getHex();
+        var mem = memory.getMemoryCell(rv + this.signed(offset), false).getHex();
         
         this.registers[dr].setValue(mem);
         
@@ -273,10 +273,11 @@ class CPU {
     str(arg, memory) {
         var dr = (arg & 0b111000000000) >> 9;
         var sr = (arg & 0b111000000) >> 6;
-        var offset = this.bextend(arg & 0x2f, 6);
+        var offset = this.bextend(arg & 0x3f, 6);
+        
         var rv = this.registers[sr].getValue();
         
-        memory.updateMemoryCell(rv + offset, this.registers[dr].getValue());
+        memory.updateMemoryCell(rv + this.signed(offset), this.registers[dr].getValue());
     }
     
     trap(arg, memory) {
@@ -336,5 +337,19 @@ class CPU {
         }
         
         return parseInt(b, 2);
+    }
+    
+    signed(num, bit = 16) {
+        var t = (num << (16 - bit)) & 0xffff;
+        t = t >> (16 - bit);
+        t = t >> (bit - 1);
+        
+        if (!isNaN(num) && bit > 0 && t === 1) {
+            num ^= 0xffff;
+            num += 1;
+            num = num * -1;
+        }
+        
+        return num;
     }
 }

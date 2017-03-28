@@ -154,7 +154,7 @@ class AsmParser {
                     case "brp":
                     case "brnz":
                     case "brzp":
-                    case "brnp": 
+                    case "brnp":
                     case "brnzp":
                         instructions[addr] = {
                             hex: this._br(instruction.slice(s-1), symbols, addr),
@@ -393,7 +393,7 @@ class AsmParser {
         }
         
         instruction += dr << 9;
-        instruction += pcoffset;
+        instruction += pcoffset - 1;
         
         return instruction;
     }
@@ -1044,11 +1044,11 @@ class AsmParser {
         }
         
         if (error !== "") {
-            var finalError = "Error with JSP '" + args + "'.\n" + error + "\n";
+            var finalError = "Error with JSR '" + args + "'.\n" + error + "\n";
             finalError += "Syntax:\n";
-            finalError += "  &bull; JSP [x11]\n";
+            finalError += "  &bull; JSR [x11]\n";
             finalError += "Examples:\n";
-            finalError += "  &bull; JSP #10\n";
+            finalError += "  &bull; JSR #10\n";
             
             return {
                 error: finalError
