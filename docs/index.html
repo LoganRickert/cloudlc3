@@ -1,0 +1,160 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>LC3 Simulator</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="">
+        <link href="https://fonts.googleapis.com/css?family=Roboto+Mono" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Roboto:400,700" rel="stylesheet">
+        <link rel="shortcut icon" href="images/favicon.ico">
+        <link rel="stylesheet" href="css/normalize.css">
+        <link rel="stylesheet" href="css/main.css">
+        <script src="js/jquery-1.12.4.min.js"></script>
+    </head>
+    <body>
+        <header>
+            <div class="wrapper">
+                <h1><a href="index.php">Cloud LC3</a></h1>
+                <nav>
+                    <ul>
+                        <li><a href="index.php">Home</a></li>
+                        <li><a href="resources.php">Resources</a></li>
+                        <li><a href="examples.php">Examples</a></li>
+                        <li><a href="machine.php">My Programs</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </header>
+        <main>
+            <div class="wrapper">
+                <h1>Program #1</h1>
+                <div class="w50 left">
+                    <section id="memory">
+                        <h2>Memory</h2>
+                        <div class="unit">
+                            <div class="unit-header">
+                                <label>Jump: <input id="memory-unit-jump" type="text" placeholder="x3000"></label>
+                                <p>
+                                <button onclick="shiftMemory(-1)">&cuwed;</button>
+                                <button onclick="shiftMemory(-8)">&cuwed;&cuwed;</button>
+                                <button onclick="shiftMemory(1)">&cuvee;</button>
+                                <button onclick="shiftMemory(8)">&cuvee;&cuvee;</button>
+                                <button onclick="setMemoryToPC()">PC</button>
+                                <button onclick="togglePredict()">Predict</button>
+                                </p>
+                            </div>
+                            <div class="unit-body">
+                                <table id="memory-unit-memory">
+                                    <tr>
+                                        <th></th>
+                                        <th>Addr</th>
+                                        <th>Label</th>
+                                        <th>Hex</th>
+                                        <th>Instruction</th>
+                                    </tr>
+                                    <tr>
+                                        <td><button id="memory-unit-breakpoint">Br</button></td>
+                                        <td>x3000</td>
+                                        <td>Start</td>
+                                        <td>x0000</td>
+                                        <td>NOP</td>
+                                    </tr>
+                                    <tr>
+                                        <td><button id="memory-unit-breakpoint">Br</button></td>
+                                        <td>x3001</td>
+                                        <td>Ready</td>
+                                        <td>x0000</td>
+                                        <td>NOP</td>
+                                    </tr>
+                                    <tr>
+                                        <td><button id="memory-unit-breakpoint">Br</button></td>
+                                        <td>x3002</td>
+                                        <td>Go</td>
+                                        <td>x0000</td>
+                                        <td>NOP</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="unit-footer">
+                                <button onclick="shiftMemory(-1)">&cuwed;</button>
+                                <button onclick="shiftMemory(-8)">&cuwed;&cuwed;</button>
+                                <button onclick="shiftMemory(1)">&cuvee;</button>
+                                <button onclick="shiftMemory(8)">&cuvee;&cuvee;</button>
+                                <button onclick="setMemoryToPC()">PC</button>
+                                <button onclick="followPC()">Follow</button>
+                                <button onclick="clearBreakPoints()">Clear BPs</button>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+                <div class="w50 right">
+                    <section id="status">
+                        <h2>Status</h2>
+                        <div class="unit">
+                            <div class="unit-header">
+                                Registers
+                            </div>
+                            <div class="unit-body">
+                                <table id="register-unit-register">
+                                </table>
+                            </div>
+                            <div class="unit-footer">
+                                <p>
+                                <button onclick="step()">Step</button>
+                                <button onclick="next()">Next</button>
+                                <button onclick="run()">Run</button>
+                                <button onclick="go()">Go</button>
+                                <button onclick="reset()">Reset</button>
+                                <button onclick="hardReset()">Full Reload</button>
+                                </p>
+                                <p><label>Default PC: <input id="register-unit-default-pc" type="text" placeholder="x3000"></label></p>
+                                <p><label>Run Speed (ms): <input id="register-unit-default-run" type="text" placeholder="1000" value="50" class="short"></label></p>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+                <div class="w100">
+                    <section id="gui">
+                        <h2>Graphical User Interface</h2>
+                        <div class="unit">
+                            <div class="unit-body gui">
+                                <canvas id="gui-output" width="512" height="288"></canvas>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+                <div class="w100">
+                    <section id="console">
+                        <h2>Console</h2>
+                        <div class="unit">
+                            <div class="unit-body console">
+                                <textarea id="console-output"></textarea>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+                <div class="w100">
+                    <section id="codeFiles">
+                        <h2>Files</h2>
+                    </section>
+                    <section class="middle ounit">
+                            <button onclick="appendFile()">Add File</button>
+                    </section>
+                </div>
+            </div>
+               <script src='programs/uppercase.js'></script>
+        </main>
+        <footer>
+            &copy; 2017 &middot; <a href="https://github.com/LoganRickert/lc3-cloud">GitHub</a> &middot; asdf &middot; <a href="https://wchargin.github.io/lc3web/">lc3web (wchargin)</a>
+        </footer>
+        <script src="js/GUI.js"></script>
+        <script src="js/Decoder.js"></script>
+        <script src="js/AsmParser.js"></script>
+        <script src="js/Memory.js"></script>
+        <script src="js/CPU.js"></script>
+        <script src="js/Machine.js"></script>
+        <script src="js/main.js"></script>
+    </body>
+</html>

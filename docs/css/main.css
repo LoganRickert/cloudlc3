@@ -1,0 +1,403 @@
+
+html {
+    background: #fff;
+    font-family: 'Roboto', sans-serif;
+    overflow-y: scroll;
+}
+
+h1, h2, h3, h4, p {
+    margin: 0;
+}
+
+main h1 {
+    padding: 40px 20px 20px;
+    font-size: 36px;
+}
+
+.wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+header {
+    background: #333;
+    color: #eee;
+    overflow: hidden;
+    float: left;
+    width: 100%;
+}
+
+header h1 {
+    padding: 20px 0;
+    float: left;
+}
+
+header ul {
+    float: right;
+}
+
+header ul li {
+    list-style-type: none;
+    float: left;
+    font-size: 18px;
+    padding: 13px 0;
+}
+
+header a {
+    color: #fff;
+    text-decoration: none;
+    padding: 20px;
+    transition: background 0.25s ease;
+}
+
+header li a {
+    padding: 30px 20px;
+}
+
+header a:hover {
+    background: #222;
+}
+
+main {
+    clear: both;
+}
+
+main section {
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+main .w50 {
+    width: 50%;
+}
+
+main .w100 {
+    clear: both;
+    max-width: 100%;
+}
+
+main .left {
+    float: left;
+}
+
+main .right {
+    float: right;
+}
+
+main .middle {
+    text-align: center;
+}
+
+main .short {
+    max-width: 70px;
+    text-align: center;
+}
+
+main h2 {
+    padding: 0 0 15px 0;
+}
+
+main .infolist li {
+    padding: 20px;
+    background: #eee;
+    list-style: none;
+    transition: background 0.25s ease;
+    font-size: 20px;
+    border-bottom: 1px solid #ccc;
+}
+
+main .infolist li:last {
+    border: none;
+}
+
+main .infolist li:hover {
+    background: #ddd;
+}
+
+main .infolist li a {
+    color: #333;
+    text-decoration: none;
+}
+
+main .infolist li:hover a {
+    font-weight: bold;
+}
+
+.unit {
+    background: #fff;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    margin: 0 0 20px 0;
+}
+
+.unit div {
+    padding: 10px;
+}
+
+.unit label {
+    color: #333;
+    background: #fff;
+    padding: 5px 0 5px 10px;
+    border-top: 1px solid #ccc;
+    border-left: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
+}
+
+.unit input[type=text] {
+    border: 1px solid #ccc;
+    padding: 5px;
+    margin: 5px 0 5px 5px;
+    color: #333;
+}
+
+.unit table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.unit th {
+    font-weight: bold;
+}
+
+.unit th, .unit td {
+    text-align: left;
+    padding: 10px 0;
+    font-size: 14px;
+}
+
+.unit td {
+    font-family: 'Roboto Mono', monospace;
+}
+
+.unit tr {
+    border-bottom: 1px solid #ccc;
+}
+
+.unit .highlighted td {
+    color: #c0392b;
+}
+
+.unit button, .ounit button {
+    background: #fff;
+    padding: 5px 10px;
+    border: 1px solid #999;
+    outline: none;
+    cursor: pointer;
+}
+
+.unit .breakpoint {
+    background: #2c3e50;
+    color: #fff;
+    border: 1px solid #ccc;
+}
+
+.unit .code-edit textarea {
+    width: 100%;
+    max-width: 100%;
+    resize: none;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 16px;
+    padding: 5px 5px 5px 30px;
+    box-sizing: border-box;
+    white-space: nowrap;
+    z-index: 0;
+    line-height: 24px;
+    font-size: 16px;
+    background: #333;
+    color: #eee;
+}
+
+.unit .line-numbers {
+    padding: 5px 10px;
+    position: absolute;
+    z-index: 1;
+    font-family: 'Roboto Mono', monospace;
+    white-space: pre;
+    line-height: 24px;
+    text-align: right;
+    font-size: 16px;
+    color: #8F908A;
+	border-right: 1px solid #464741;
+}
+
+.unit .line-warnings {
+    padding: 5px 10px;
+    position: absolute;
+    z-index: 2;
+    font-family: 'Roboto Mono', monospace;
+    white-space: pre;
+    line-height: 24px;
+    text-align: right;
+    font-size: 16px;
+    color: #e74c3c;
+}
+
+.tooltip {
+    background: #333;
+}
+
+.edittip {
+
+}
+
+.tooltiptext {
+    background-color: black;
+    color: #fff;
+    text-align: left;
+    margin: 10px 0 0 20px;
+    padding: 10px;
+    border-radius: 6px;
+    /*display: none;*/
+    position: absolute;
+    visibility: hidden;
+    overflow: hidden;
+    opacity: 0;
+    
+    transition: all 0.5s ease;
+}
+
+.tooltiptext input[type="text"] {
+    padding: 5px;
+    background: #fff;
+    color: #333;
+    margin: 0;
+    font-size: 16px;
+    width: 100px;
+}
+
+.tooltiptext button {
+    background: #fff;
+    color: #333;
+    padding: 5px;
+    margin: 0;
+    font-size: 16px;
+}
+
+.tooltip:hover .tooltiptext, .edittip:hover .tooltiptext {
+    /*display: inline;*/
+    visibility: visible;
+    opacity: 1;
+}
+
+.unit-header {
+    background: #eee;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    border-bottom: 1px solid #ccc;
+}
+
+.unit-header p {
+    padding: 5px 0 0;
+}
+
+.unit-footer {
+    background: #eee;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    border-top: 1px solid #ccc;
+}
+
+.ounit {
+    margin: 0;
+    padding: 0 20px 20px 20px;
+}
+
+.unit .console textarea {
+    width: 100%;
+    max-width: 100%;
+    height: 250px;
+    resize: none;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 16px;
+    padding: 10px;
+    box-sizing: border-box;
+    white-space: nowrap;
+    z-index: 0;
+    line-height: 24px;
+    font-size: 16px;
+    background: #eee;
+    color: #333;
+}
+
+#gui {
+    display: none;
+}
+
+.unit .gui {
+    width: 512px;
+    height: 288px;
+    margin: 0 auto;
+}
+
+.unit .gui canvas {
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+    background: #222;
+    
+}
+
+.sidebar nav {
+    min-width: 230px;
+    background: #eee;
+    padding: 10px 20px;
+    margin: 0;
+    border: 1px solid #ccc;
+    border-radius: 7px;
+}
+
+.sidebar nav h4 {
+    padding: 10px 0 0;
+    color: #333;
+}
+
+.sidebar nav ul li {
+    list-style-type: disc;
+    padding: 5px;
+}
+
+.sidebar nav ul li a {
+    color: #2980b9;
+    text-decoration: none;
+    transition: color 0.5s ease;
+}
+
+.sidebar nav ul li a:hover {
+    color: #111;
+}
+
+.res-wrap {
+    display: flex;
+    flex: 1;
+}
+
+.sidebar {
+    clear: left;
+    order: -1;
+}
+
+.res-content {
+    flex: 1;
+    order: 2;
+    padding: 20px;
+    font-size: 16px;
+    line-height: 26px;
+}
+
+.res-content p {
+    padding: 10px 0;
+}
+
+.res-content h2 {
+    padding: 10px 0;
+    margin: 0 0 0 0;
+    border-bottom: 1px solid #ccc;
+}
+
+footer {
+    clear: both;
+    text-align: center;
+    padding: 20px 0;
+}

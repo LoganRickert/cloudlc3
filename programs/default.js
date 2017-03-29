@@ -9,7 +9,7 @@ var codeFiles = [
 	; Print prompt
 prompt	LD R0 arrow
 	OUT
-	LD R0 space
+B_stop	LD R0 space
 	OUT
 
 	; Get user input and print it out
