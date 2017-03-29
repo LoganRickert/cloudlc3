@@ -57,6 +57,7 @@
                                 <button onclick="shiftMemory(8)">&cuvee;&cuvee;</button>
                                 <button onclick="setMemoryToPC()">PC</button>
                                 <button onclick="followPC()">Follow</button>
+                                <button onclick="clearBreakPoints()">Clear BPs</button>
                             </div>
                         </div>
                     </section>
@@ -75,12 +76,14 @@
                             <div class="unit-footer">
                                 <p>
                                 <button onclick="step()">Step</button>
+                                <button onclick="next()">Next</button>
                                 <button onclick="run()">Run</button>
+                                <button onclick="go()">Go</button>
                                 <button onclick="reset()">Reset</button>
-                                <button onclick="hardReset()">Hard Load</button>
+                                <button onclick="hardReset()">Full Reload</button>
                                 </p>
                                 <p><label>Default PC: <input id="register-unit-default-pc" type="text" placeholder="x3000"></label></p>
-                                <p><label>Run Speed (ms): <input id="register-unit-default-run" type="text" placeholder="1000" value="100" class="short"></label></p>
+                                <p><label>Run Speed (ms): <input id="register-unit-default-run" type="text" placeholder="1000" value="50" class="short"></label></p>
                             </div>
                         </div>
                     </section>

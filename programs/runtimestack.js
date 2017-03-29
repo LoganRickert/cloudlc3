@@ -6,7 +6,7 @@ var codeFiles = [
 
         .ORIG x3000
         
-        ;; --------\\ Boot \\-------- ;;
+        ;; --------\\ Bootstrap \\-------- ;;
 
         LD R5 STK_PTR
         LD R6 STK_PTR
@@ -18,7 +18,7 @@ var codeFiles = [
 
 STK_PTR .FILL x4000         ; Stack Pointer
 
-        ;; --------/ Boot /-------- ;;
+        ;; --------/ Bootstrap /-------- ;;
 
 MAIN    ; int main() {
 
@@ -53,7 +53,7 @@ MAIN    ; int main() {
         ;|                                        |;
         ;| Set Frame Pointer                      |;
         ;| R5 = R6 - 1                            |;
-           ADD R5 R6 #-1        ; Set R5 to R6 minus
+           ADD R5 R6 #-1        ; Set R5 to R6 minus 1
         ;|                                        |;
         ;| Allocate space for 3 variables         |;
            ADD R6 R6 #-3                          ;;
@@ -78,7 +78,7 @@ _MAIN   ; int A = 3;
         LDR R0 R5 #0        ; Load A
         JSR PUSH            ; Push A
 
-        JSR ADDNUM          ; Call add
+        JSR ADDNUM          ; Call addnum
         
         ; -- // C = [addNum return value]
         JSR POP             ; R0 = return value of addNum
@@ -137,7 +137,7 @@ ADDNUM  ; int addNum(A, B) {
         ;|                                        |;
         ;| Set Frame Pointer                      |;
         ;| R5 = R6 - 1                            |;
-           ADD R5 R6 #-1        ; Set R5 to R6 minus
+           ADD R5 R6 #-1        ; Set R5 to R6 minus 1
         ;|                                        |;
         ;| Allocate space for 0 variables         |;
            ADD R6 R6 #0                           ;;

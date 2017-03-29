@@ -186,6 +186,12 @@ main .infolist li:hover a {
     cursor: pointer;
 }
 
+.unit .breakpoint {
+    background: #2c3e50;
+    color: #fff;
+    border: 1px solid #ccc;
+}
+
 .unit .code-edit textarea {
     width: 100%;
     max-width: 100%;

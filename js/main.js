@@ -36,9 +36,16 @@ var predict = false;
 var sm = 0x3000;
 var fpc = false;
 
+var breakpoints = [];
+
 function followPC() {
     fpc = !fpc;
     
+    refreshView();
+}
+
+function clearBreakPoints() {
+    breakpoints = [];
     refreshView();
 }
 
@@ -62,15 +69,67 @@ function step() {
 }
 
 var running = 0;
+var shouldRefresh = true;
+
+function go() {
+    if (running === 0) {
+        shouldRefresh = false;
+        
+        running = setInterval(function() {
+                this.machine.step();
+            }, 5);
+    } else {
+        clearInterval(running);
+        running = 0;
+        shouldRefresh = true;
+    }
+}
 
 function run() {
+    var first = true;
+    
     if (running === 0) {
         running = setInterval(function() {
-            this.machine.step();
+                if (first || !isBP(this.machine.getPC())) {
+                    this.machine.step();
+                } else {
+                    clearInterval(running);
+                    running = 0;
+                    shouldRefresh = true;
+                }
+                first = false;
             }, document.getElementById("register-unit-default-run").value);
     } else {
         clearInterval(running);
         running = 0;
+        shouldRefresh = true;
+    }
+}
+
+function next() {
+    var cur = this.machine.getPC();
+    var first = true;
+    
+    console.log("CurPC: " + itosh(cur));
+    
+    if (running === 0) {
+        running = setInterval(function() {
+                var pc = this.machine.getPC()
+                if (cur + 1 != pc && (first || !isBP(pc))) {
+                    this.machine.step();
+                    console.log("New PC: " + itosh(pc));
+                } else {
+                    console.log("Ended PC: " + itosh(pc));
+                    clearInterval(running);
+                    running = 0;
+                    shouldRefresh = true;
+                }
+                first = false;
+            }, document.getElementById("register-unit-default-run").value);
+    } else {
+        clearInterval(running);
+        running = 0;
+        shouldRefresh = true;
     }
 }
 
@@ -108,8 +167,6 @@ function actualErrorCheck(el) {
         } else {
             asmE += "<span class='tooltip'>" + asmSpacer + "E<div class='tooltiptext'>" + fb.errors + "</div></span>";
         }
-        
-        console.log(fb);
         
         asmE += "\n";
     }
@@ -166,11 +223,14 @@ function reset() {
     running = 0;
     
     refreshView();
+    
+    shouldRefresh = true;
 }
 
 function hardReset() {
     machine = null;
     machine = new Machine();
+    shouldRefresh = true;
     
     $(".code-edit textarea").each(function(){
         machine.loadAsm(this.value);
@@ -188,6 +248,21 @@ function hardReset() {
     
     setMemoryToPC();
     refreshView();
+}
+
+function setBreakPoint(addr) {
+    if (!isBP(addr)) {
+        console.log("Set breakpoint for: " + itosh(addr))
+        breakpoints.push(addr);
+    } else {
+        breakpoints.splice(breakpoints.indexOf(addr), 1);
+    }
+    
+    refreshView();
+}
+
+function isBP(addr) {
+    return breakpoints.indexOf(addr) > -1;
 }
 
 /*
@@ -220,7 +295,14 @@ function loadMemory() {
         var iinstruction = decoder.decode(mcell.getHex(), i, machine.getMemory(), machine.getCPU());
         var iascii = String.fromCharCode((mcell.getHex() & 0xff00) >> 8) + String.fromCharCode(mcell.getHex() & 0xff);
         
-        newInner += "<td><button id='memory-unit-breakpoint'>B</button></td>\
+        var addbp = "";
+        
+        if (isBP(i)) {
+            addbp = " class='breakpoint'";
+            console.log("Drew breakpoint.");
+        }
+        
+        newInner += "<td><button onclick='setBreakPoint(" + i + ")'" + addbp + ">B</button></td>\
             <td>" + itosh(i) + "</td>\
             <td colspan='2'>" + ilabel + "</td>\
             <td><span class='edittip'>" + ihex + "<div class='tooltiptext'><input type='text' value='" + ihex + "'><button onclick='changeMemory(this, " + i + ", 0)'>Edit</button></div></span></td>\
@@ -374,8 +456,10 @@ function refreshView(shift = 0) {
     
     // sm = nsm;
     
-    loadMemory();
-    loadRegisters();
+    if (shouldRefresh) {
+        loadMemory();
+        loadRegisters();
+    }
 }
 
 function recalcTextarea(el, override = false, numRows = -1) {

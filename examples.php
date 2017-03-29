@@ -5,6 +5,7 @@
         array("name" => "Draw A Line", "file" => "basicgui"),
         array("name" => "Guessing Game", "file" => "guessgame"),
         array("name" => "Sum Inputs", "file" => "summer"),
+        array("name" => "Runtime Stack", "file" => "runtimestack"),
     );
     
     echo file_get_contents('src/header.html');

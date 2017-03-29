@@ -280,6 +280,7 @@ class AsmParser {
             instruction += sr2;
         } else if (!isNaN(this._toint(toadd, 5))) {
             instruction += 0x20;
+            console.log("v: " + toadd + " add: " + this._toint(toadd, 5))
             instruction += this._toint(toadd, 5) & 0x1f;
         } else {
             return {
@@ -940,6 +941,10 @@ class AsmParser {
             }
         }
         
+        // if (args[1].match(/[a-z][a-z0-9_]*/) && !(args[1] in symbols)) {
+        //     error += "  &bull; " + args[1] + " label does not exist!.\n";
+        // }
+        
         if (error !== "") {
             var finalError = "Error with BR '" + args + "'.\n" + error + "\n";
             finalError += "Syntax:\n";
@@ -970,12 +975,12 @@ class AsmParser {
             var b = addr;
             var a = symbols[args[1]];
     
-            pcoffset = (a - b) & 0x1ff;
+            pcoffset = (a - b - 1) & 0x1ff;
         } else {
-            pcoffset = this._toint(args[1]) & 0x1ff;
+            pcoffset = (this._toint(args[1]) - 1) & 0x1ff;
         }
         
-        instruction += pcoffset-1;
+        instruction += pcoffset;
         
         return instruction;
     }
@@ -1074,7 +1079,7 @@ class AsmParser {
     }
     
     _is_numeric(str, hex = false){
-        return hex ? /^([0-9a-fA-F])+$/.test(str) : /^([0-9\\-])+$/.test(str)
+        return hex ? /^([0-9a-fA-F\-])+$/.test(str) : /^([0-9\\-])+$/.test(str)
     }
     
     _and(args, symbols, addr) {
@@ -1159,15 +1164,12 @@ class AsmParser {
             if (instructionSet[token] === undefined && !asmSet[token] && token[0] !== '.') {
 
                 // symbol!!!
-                console.log("Got symbol " + instruction);
                 if (token.match(/[a-z][a-z0-9_]*/)) {
                     if (token in symbols) {
                         return {
                             errors: ["Duplicate symbol '" + token + "' at line " + i + ". Last found at line: " + itosh(symbols[token])]
                         };
                     }
-                    
-                    console.log("Here! " + itosh(addr));
                     
                     if (instruction.length === 1) {
                         symbols[token] = addr;
@@ -1205,14 +1207,12 @@ class AsmParser {
                     };
                 }
             } else if (token[0] === '.') {
-                console.log("Starts with a dotasdf. " + instruction);
                 
                 if (token === ".orig" || token === ".end") {
                     addr++;
                 } else if (instruction.length >= 2 && token == ".fill") {
                     addr++;
                 } else if (instruction.length >= 2 && token === ".blkw") {
-                    console.log("Skipping: " + this._toint(instruction[1]));
                     addr += this._toint(instruction[1]);
                 } else if (instruction.length >= 2 && token === ".stringz") {
                     var str = instruction.slice(2).join(" ");
@@ -1225,13 +1225,9 @@ class AsmParser {
                     };
                 }
             } else {
-                console.log("instruction");
                 addr++;
             }
         }
-        
-        console.log("end symbols:");
-        console.log(symbols);
         
         return symbols;
     }
@@ -1293,7 +1289,7 @@ class AsmParser {
         if (n.length >= 2) {
             if (n[0] == "x") {
                 n = n.slice(1);
-                if (n.match("[0-9A-F]+")) {
+                if (n.match("[0-9a-fA-F]+")) {
                     num = parseInt(n, 16);
                 }
             } else if (n[0] == "#") {

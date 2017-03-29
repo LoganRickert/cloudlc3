@@ -46,18 +46,6 @@ class Machine {
         refreshView(1);
     }
     
-    next() {
-        
-    }
-    
-    finish() {
-        
-    }
-    
-    run() {
-        
-    }
-    
     getMemoryCell(i) {
         return this.memory.getMemoryCell(i);
     }
