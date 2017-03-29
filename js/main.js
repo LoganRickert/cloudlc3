@@ -297,9 +297,12 @@ function loadMemory() {
         
         var addbp = "";
         
+        if (!isBP(i) && ilabel.startsWith("b_")) {
+            setBreakPoint(i);
+        }
+        
         if (isBP(i)) {
             addbp = " class='breakpoint'";
-            console.log("Drew breakpoint.");
         }
         
         newInner += "<td><button onclick='setBreakPoint(" + i + ")'" + addbp + ">B</button></td>\
