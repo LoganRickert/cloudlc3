@@ -132,7 +132,7 @@ MAINIF1
         LD R1 CR            ; Load \\n
         ADD R0 R0 R1        ; Compare
         BRnp MAINIF1E       ; If not equal, end.
-        BRz MAINIF1B        ; Char is \n, so skip to if body
+        BRz MAINIF1B        ; Char is \\n, so skip to if body
 
         LDR R0 R5 #-18      ; Load nextChar
         LD R1 SPACE         ; Load space
