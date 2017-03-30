@@ -1,4 +1,4 @@
-# lc3-cloud
+# CloudLC3
 
 View a live copy:
 
