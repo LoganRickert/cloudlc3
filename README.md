@@ -6,4 +6,4 @@ https://loganrickert.github.io/cloudlc3/
 
 Check out the official website:
 
-https://www.cloudlc3.com
+http://www.cloudlc3.com
