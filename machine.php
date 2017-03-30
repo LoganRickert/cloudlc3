@@ -80,7 +80,7 @@
                                 <button onclick="run()">Run</button>
                                 <button onclick="go()">Go</button>
                                 <button onclick="reset()">Reset</button>
-                                <button onclick="hardReset()">Full Reload</button>
+                                <button onclick="hardReset()">Restart</button>
                                 </p>
                                 <p><label>Default PC: <input id="register-unit-default-pc" type="text" placeholder="x3000"></label></p>
                                 <p><label>Run Speed (ms): <input id="register-unit-default-run" type="text" placeholder="1000" value="50" class="short"></label></p>
