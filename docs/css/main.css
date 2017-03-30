@@ -393,11 +393,146 @@ main .infolist li:hover a {
 .res-content h2 {
     padding: 10px 0;
     margin: 0 0 0 0;
-    border-bottom: 1px solid #bbb;
+    border-bottom: 1px solid #ccc;
 }
 
 footer {
     clear: both;
     text-align: center;
-    padding: 20px 0;
+    padding: 60px 0;
+}
+
+.bottom-calc {
+    position: absolute;
+    bottom: 0;
+}
+
+.bottom-calc div {
+    position: fixed;
+    bottom: 0;
+    width: 190px;
+    right: 0;
+    padding: 10px 20px;
+    margin: 0 20px 0 0;
+    background: #fff;
+    box-sizing: border-box;
+    border-top: 1px solid #333;
+    border-left: 1px solid #333;
+    border-right: 1px solid #333;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+
+.bottom-calc form {
+    padding: 0px;
+    margin: 0px;
+}
+
+.bottom-calc h1 {
+    padding: 0 0 5px 0;
+    margin: 0 0 5px 0;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.bottom-calc label {
+    display: block;
+    padding: 8px 0 3px 0;
+}
+
+.bottom-calc input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 2px;
+}
+
+.bottom-ref {
+    position: absolute;
+    bottom: 0;
+}
+
+.bottom-ref > div {
+    position: fixed;
+    bottom: 0;
+    width: 300px;
+    left: 0;
+    padding: 10px 10px 10px 20px;
+    margin: 0 0 0 20px;
+    background: #fff;
+    box-sizing: border-box;
+    border-top: 1px solid #333;
+    border-left: 1px solid #333;
+    border-right: 1px solid #333;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    z-index: 50;
+}
+
+.bottom-ref h1 {
+    padding: 0 0 5px 0;
+    margin: 0 0 5px 0;
+    text-align: left;
+    border-bottom: 0;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.bottom-ref > div > ul {
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+    border-top: 1px solid #999;
+    max-height: 300px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
+.bottom-ref > div > ul > li {
+    padding: 10px;
+    border-bottom: 1px solid #999;
+    color: #222;
+    font-family: 'Roboto Mono', monospace;
+}
+
+.bottom-ref > div > ul > li:nth-child(2n) {
+    background: #ddd;
+}
+
+.bottom-ref li > div {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    width: 340px;
+    left: 319px;
+    background: white;
+    padding: 20px;
+    box-sizing: border-box;
+    border-top: 1px solid #333;
+    border-left: 1px solid #333;
+    border-right: 1px solid #333;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+
+.bottom-ref li:hover > div {
+    display: block;
+}
+
+.bottom-ref li h2 {
+    font-size: 18px;
+    font-weight: bold;
+    padding: 0 0 5px 0;
+    margin: 0;
+}
+
+.bottom-ref li p {
+    font-size: 16px;
+    line-height: 150%;
+    padding: 5px 0;
+}
+
+.bottom-ref li > div > ul > li {
+    padding: 3px 0;
 }

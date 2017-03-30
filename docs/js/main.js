@@ -359,15 +359,15 @@ function loadRegisters() {
     el.innerHTML = newInner;
 }
 
-function getPrintableAscii(c) {
+function getPrintableAscii(c, rep = "&diams;") {
     var newc = "";
     
     if (c.length > 0) {
         if (c.charCodeAt(0) === 0) newc += " ";
-        else newc += c.charCodeAt(0) < 32 ? "&diams;" : c[0];
+        else newc += c.charCodeAt(0) < 32 ? rep : c[0];
     }
     if (c.length > 1) {
-        newc += c.charCodeAt(1) < 32 ? "&diams;" : c[1];
+        newc += c.charCodeAt(1) < 32 ? rep : c[1];
     }
         
     return newc;
@@ -627,6 +627,113 @@ function outputKey(k) {
     consoleta.scrollTop = consoleta.scrollHeight;
 }
 
+function calcToInt(n, bit = -1, mask = -1) {
+    var num = 0;
+    
+    if (n.length >= 2) {
+        if (n[0] == "x") {
+            n = n.slice(1);
+            if (n.match("[0-9a-fA-F]+")) {
+                num = parseInt(n, 16);
+            }
+        } else if (n[0] == "#") {
+            var sign = 1;
+            
+            if (n.length >= 3 && n[1] === '-') {
+                sign = -1;
+                n = n.slice(2);
+            } else {
+                n = n.slice(1);
+            }
+            
+            num = sign * parseInt(n);
+        } else {
+            num = n;
+        }
+    } else {
+        num = n;
+    }
+    
+    num &= 0xffff;
+    
+    if (bit > 0) {
+        var t = (num << (16 - bit)) & 0xffff;
+        t = t >> (16 - bit);
+        t = t >> (bit - 1);
+        
+        if (!isNaN(num) && bit > 0 && t === 1) {
+            num ^= 0xffff;
+            num += 1;
+            num = num * -1;
+        }
+    }
+    
+    return num;
+}
+
+function cbase10(value) {
+    return value;
+}
+
+function cbase16(value) {
+    console.log(value + " " + (-value));
+    return itosh(value);
+}
+
+function cbase2(value) {
+    return ((value >>> 0) & 0xffff).toString(2);
+}
+
+function cbase16n(value) {
+    value = (value * -1) & 0xffff;
+    return itosh(value);
+}
+
+function cbasea(value) {
+    value = String.fromCharCode((value & 0xff00) >> 8) + String.fromCharCode(value & 0xff);
+    return getPrintableAscii(value, " ");
+}
+
+var calcinputs = {
+    "cbase10": cbase10,
+    "cbase16": cbase16,
+    "cbase2": cbase2,
+    "cbasea": cbasea,
+    "cbase16n": cbase16n
+};
+
+function calculatorInput(el) {
+    var ela = '#' + el;
+    
+    $(ela).bind('input propertychange', function() {
+        var val = 0;
+        
+        if (el === "cbase2") {
+            val = parseInt($(ela).val(), 2);
+        } else if(el === "cbasea") {
+            var code = $(ela).val();
+            
+            val = code.charCodeAt(0);
+            
+            if (code.length > 1) {
+                val = (val << 8) + (code.charCodeAt(1));
+            }
+        } else {
+            val = calcToInt($(ela).val());
+        }
+        
+        for (var x in calcinputs) {
+            if (x !== el) {
+                $("#" + x).val(calcinputs[x](val));
+            }
+        }
+    });
+}
+
+for (var x in calcinputs) {
+    calculatorInput(x);
+}
+
 loadAllFiles();
 refreshView();
 
@@ -648,6 +755,18 @@ $(consoleta).keydown(function(event) {
     if (event.which == 8) {
      event.preventDefault();
    }
+});
+
+$("#calcform").hide();
+
+$("#calcheader").click(function(event) {
+    $("#calcform").slideToggle();
+});
+
+$("#reflist").hide();
+
+$("#refheader").click(function(event) {
+    $("#reflist").slideToggle();
 });
 
 checkErrors();
