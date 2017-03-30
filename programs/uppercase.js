@@ -270,12 +270,12 @@ UPPER   ; void upper(char* buffer, int length) {
         ;|                                        |;
         ;; --------/ Build Stack Frame  /-------- ;;
 
-UPPERWHILE1
         ; length -= 2;
         LDR R0 R5 #5            ; Load length
         ADD R0 R0 #-2           ; Subtract 1
         STR R0 R5 #5            ; Store result
 
+UPPERWHILE1
         ; while (length > 0) {
         LDR R0 R5 #5
         BRn UPPERWHILE1E
