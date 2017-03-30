@@ -5,7 +5,7 @@
                 <div class="wrapper">
                     <h1>CloudLC3</h1>
                     <section class="content">
-                        <p>A new way to code LC3 - FREE!</p>
+                        <p>A new way to code LC3 - for FREE!</p>
                         <p><a href="machine.php">Get Started!</a></p>
                         <img src="images/lc31.png">
                     </section>
