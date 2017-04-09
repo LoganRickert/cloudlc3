@@ -32,7 +32,7 @@ class CPU {
         this.psr = new Register(width);
         
         this.setPC(0x3000);
-        this.cc = 0;
+        this.setPSR(0, 7, 0);
     }
     
     createRegisters(regCount, width) {
@@ -41,6 +41,27 @@ class CPU {
         for (var i = 0; i < regCount; i++) {
             this.registers[i] = new Register(width);
         }
+    }
+    
+    setMode(mode) {
+        this.psr.setValue(
+            (mode << 15) | this.psr.getValue()    
+        )
+    }
+    
+    setPriority(priority) {
+        this.psr.setValue(
+            (priority << 7) | this.psr.getValue()    
+        )
+    }
+    
+    setPSR(mode, priority, nzp) {
+        this.setMode(mode);
+        this.setPriority(priority)
+    }
+    
+    getPSR() {
+        return this.psr;
     }
     
     setPC(value) {
@@ -72,11 +93,21 @@ class CPU {
     }
     
     setCC(c) {
-        this.cc = c;
+        this.psr.setValue(
+            (this.psr.getValue() & 0xfff8) | c
+        )
     }
     
     getCC() {
-        return this.cc;
+        return this.psr.getValue() & 0x7;
+    }
+    
+    newCC(v) {
+        var sign = ((v & 0xffff) >> 0xf) === 1 ? -1 : 1;
+        
+        if (v === 0) this.setCC(0b010);
+        else if (sign < 0) this.setCC(0b100);
+        else if (sign > 0) this.setCC(0b001);
     }
     
     setRegister(i, x) {
@@ -211,9 +242,9 @@ class CPU {
         var p = (arg & 0b001000000000) >> 9;
         var offset = this.bextend(arg & 0x1ff, 9);
         
-        if (this.cc & 0b100 && n === 1 ||
-            this.cc & 0b010 && z === 1 ||
-            this.cc & 0b001 && p === 1) {
+        if (this.getCC() & 0b100 && n === 1 ||
+            this.getCC() & 0b010 && z === 1 ||
+            this.getCC() & 0b001 && p === 1) {
             this.pc.changeValue(offset);
         }
     }
@@ -317,14 +348,6 @@ class CPU {
         console.log("----");
         
         this.setPC(newPC);
-    }
-    
-    newCC(v) {
-        var sign = ((v & 0xffff) >> 0xf) === 1 ? -1 : 1;
-        
-        if (v === 0) this.setCC(0b010);
-        else if (sign < 0) this.setCC(0b100);
-        else if (sign > 0) this.setCC(0b001);
     }
     
     bextend(v, a) {

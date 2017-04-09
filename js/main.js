@@ -24,6 +24,13 @@ function itosh(i) {
     return "x" + hexString;
 }
 
+var pad = "0000000000000000";
+
+function itosb(i) {
+    var ret = ((i >>> 0) & 0xffff).toString(2);
+    return pad.substring(0, pad.length - ret.length) + ret;
+}
+
 var gui = new GUI(document.getElementById("gui-output"));
 
 var decoder = new Decoder();
@@ -348,6 +355,16 @@ function loadRegisters() {
         <td colspan='2'></td>";
     newInner += "</tr>";
     
+    var v = machine.getPSR();
+    var ihex = itosh(v);
+    // var ibin = itosb(v);
+    newInner += "<tr>\
+        <td>PSR</td>\
+        <td><span class='edittip'>" + ihex + "<div class='tooltiptext'><input type='text' value='" + ihex + "'><button onclick='changeRegister(this, 8)'>Edit</button></div></span></td>\
+        <td>" + v  + "</td>\
+        <td colspan='2'>M" + (v >> 15) + " - PL" + ((v >> 7) & 0x7) + "</td>";
+    newInner += "</tr>";
+    
     var v = machine.getIR();
     newInner += "<tr>\
         <td>IR</td>\
@@ -549,7 +566,7 @@ function appendFile(name = "", code = "", loadContents = false) {
                 <form>
                     <div class="line-warnings"></div>
                     <div class="line-numbers"></div>
-                    <textarea id="code-area-text` + filesLoaded + `">` + code + `</textarea>
+                    <textarea id="code-area-text` + filesLoaded + `">` + code.replace(/\r?\n/g, "\r\n") + `</textarea>
                 </form>
             </div>
         </div>
@@ -681,7 +698,7 @@ function cbase16(value) {
 }
 
 function cbase2(value) {
-    return ((value >>> 0) & 0xffff).toString(2);
+    return itosb(value);
 }
 
 function cbase16n(value) {
